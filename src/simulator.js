@@ -1,3 +1,4 @@
+import { constrainDevice, canvasSize } from './engine/canvas';
 
 'use strict';
 const $=id=>document.getElementById(id);
@@ -137,7 +138,7 @@ t('qfcharge_ol','qfcharge','OUT','L','L',1020,147,'INVERTER · AC IN · L','L н
 t('qfhome_il','qfhome','IN','L','L',1270,560,'ATS · LOAD OUT · L','L от АВР на QF4.');t('qfhome_in','qfhome','IN','N','N',1270,585,'ATS · LOAD OUT · N','N от АВР на QF4.');
 t('qfhome_ol','qfhome','OUT','L','L',1352,560,'HOUSE · AC IN · L','L отходящих линий щита.');t('qfhome_on','qfhome','OUT','N','N',1352,585,'HOUSE · AC IN · N','N к изолированной шине резервных линий; не к общим нейтралям всех источников.');
 function escapeHTML(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
-function boundOffset(d,x,y){const margin=36;return {x:Math.round(Math.max(margin-d.x,Math.min(12000-d.x-d.w,x))),y:Math.round(Math.max(margin-d.y,Math.min(9000-d.y-d.h,y)))};}
+function boundOffset(d,x,y){const p=constrainDevice({x:d.x+x,y:d.y+y},{width:d.w,height:d.h});return {x:p.x-d.x,y:p.y-d.y};}
 function getOffset(id){return deviceOffsets[id]||DEFAULT_DEVICE_OFFSETS[id]||{x:0,y:0};}
 function getWorldTerminal(t){const a=getOffset(t.device);return {x:t.x+a.x,y:t.y+a.y};}
 function getDevice(id){return devicePaths.find(d=>d.id===id);}
@@ -317,7 +318,7 @@ function animate(ts){const delta=Math.min((ts-lastFrame)/1000,.25);lastFrame=ts;
 // Infinite-feeling canvas navigation: buttons, fit, Ctrl+wheel, shift+drag, double tap.
 let zoom=1;
 let canvasW=1600,canvasH=755;
-function expandCanvas(){let w=2200,h=1120;for(const d of devicePaths){const a=getOffset(d.id);w=Math.max(w,Math.ceil((d.x+a.x+d.w+90)/120)*120);h=Math.max(h,Math.ceil((d.y+a.y+d.h+90)/120)*120)}if(w===canvasW&&h===canvasH)return;canvasW=w;canvasH=h;const svg=$('diagram');svg.setAttribute('viewBox','0 0 '+canvasW+' '+canvasH);const bg=svg.querySelector('rect[fill="url(#dots)"]');if(bg){bg.setAttribute('width',canvasW);bg.setAttribute('height',canvasH)}svg.style.width=canvasW*zoom+'px';svg.style.height=canvasH*zoom+'px';ROUTE_W=Math.ceil(canvasW/ROUTE_STEP)+1;ROUTE_H=Math.ceil(canvasH/ROUTE_STEP)+1;}
+function expandCanvas(){const bounds=canvasSize(devicePaths.map(d=>{const a=getOffset(d.id);return {x:d.x+a.x,y:d.y+a.y,width:d.w,height:d.h}}));let w=bounds.width,h=bounds.height;if(w===canvasW&&h===canvasH)return;canvasW=w;canvasH=h;const svg=$('diagram');svg.setAttribute('viewBox','0 0 '+canvasW+' '+canvasH);const bg=svg.querySelector('rect[fill="url(#dots)"]');if(bg){bg.setAttribute('width',canvasW);bg.setAttribute('height',canvasH)}svg.style.width=canvasW*zoom+'px';svg.style.height=canvasH*zoom+'px';ROUTE_W=Math.ceil(canvasW/ROUTE_STEP)+1;ROUTE_H=Math.ceil(canvasH/ROUTE_STEP)+1;}
 function setZoom(next,anchor){
  const sc=$('diagramScroll'),rect=sc.getBoundingClientRect(),old=zoom;
  zoom=Math.max(.18,Math.min(2.5,Math.round(next*100)/100));
