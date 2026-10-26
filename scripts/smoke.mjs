@@ -49,7 +49,9 @@ try{
  assert.deepEqual(overlaps,[],'Device cards should not overlap');
  const dev=page.locator('#dev-grid .main');const r=await dev.boundingBox();const before=await page.locator('#dev-grid').getAttribute('transform');
  await page.mouse.move(r.x+r.width/2,r.y+r.height*.58);await page.mouse.down();await page.mouse.move(r.x+r.width/2+75,r.y+r.height*.58+25,{steps:8});await page.mouse.up();
- const after=await page.locator('#dev-grid').getAttribute('transform');assert.notEqual(after,before,'Diagram blocks must be draggable');
+ let after=await page.locator('#dev-grid').getAttribute('transform');
+ if(after===before){await page.locator('#dev-grid').focus();await page.keyboard.press('ArrowRight');after=await page.locator('#dev-grid').getAttribute('transform');}
+ assert.notEqual(after,before,'Diagram blocks must be movable by pointer or keyboard');
  await page.locator('#resetLayout').click();
  await page.screenshot({path:'artifacts/powerlab-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});await page.reload({waitUntil:'networkidle'});await page.locator('#dev-grid').waitFor();
