@@ -70,7 +70,7 @@ body{font-size:12px}.shell{max-width:1900px}.brand{font-size:18px}.kpi .big{font
 'use strict';
 const $=id=>document.getElementById(id);
 const R={GRID:'grid',GEN:'generator',INV:'inverter'};
-const LIMIT={STAB:12,GEN:2.8,INV:9,CHARGE:1.0,CAP:15,MIN_SOC:5,LOW_V:170,HIGH_V:255};
+const LIMIT={STAB:12,GEN:2.8,INV:9,CHARGE:1.0,CAP:15,MIN_SOC:5,LOW_V:90,HIGH_V:310};
 const RATINGS=[6,10,16,20,25,32,40,50,63,80,100,125,160,200,250];
 function nextRating(amps){return RATINGS.find(x=>x>=amps)||'>250';}
 function ratingUpdate(){
@@ -115,7 +115,7 @@ function calc(){
  const chargePower=(chargeFrom==='none'||state.soc>=99.95)?0:Math.max(0,Math.min(LIMIT.CHARGE,remaining));
  const dischargePower=source==='inverter'?state.load/0.9:0;
  let warnings=[];
- if(gridFeed&&!gridSafe)warnings.push('Напряжение за диапазоном стабилизатора (условно 170–255 В)');
+ if(gridFeed&&!gridSafe)warnings.push('Напряжение за диапазоном стабилизатора (90–310 В)');
  if(!state.qfHome)warnings.push('QF4 отключён: линии дома обесточены');
  else if(!source || source==='none')warnings.push('Дом обесточен: нет доступного источника необходимой мощности');
  if(genFeed&&state.load>LIMIT.GEN&&source!=='grid')warnings.push('Нагрузка превышает мощность генератора '+fmt(LIMIT.GEN)+' кВт');
