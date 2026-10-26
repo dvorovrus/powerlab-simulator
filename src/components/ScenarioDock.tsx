@@ -1,0 +1,5 @@
+import {Button} from './ui/button';
+export function ScenarioDock(){return (
+<div className="scenario-dock"><div className="section-title"><h2>ГОТОВЫЕ СЦЕНАРИИ</h2><span className="hint">Нажмите, чтобы воспроизвести ситуацию</span></div>
+        <div className="scenario-bar" id="scenarioBar"><Button className="scenario active" data-scenario="normal"><small>01</small>Нормальная сеть</Button><Button className="scenario" data-scenario="outage"><small>02</small>Пропала сеть</Button><Button className="scenario" data-scenario="generator"><small>03</small>Питание от генератора</Button><Button className="scenario" data-scenario="gencharge"><small>04</small>Генератор + заряд АКБ</Button><Button className="scenario" data-scenario="lowbat"><small>05</small>АКБ разряжен</Button><Button className="scenario" data-scenario="lowvoltage"><small>06</small>Низкое напряжение</Button><Button className="scenario" data-scenario="restore"><small>07</small>Сеть восстановилась</Button><Button className="scenario" data-scenario="overload"><small>08</small>Перегрузка</Button></div></div>
+);}
