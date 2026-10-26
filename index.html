@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="color-scheme" content="dark" />
+<meta name="color-scheme" content="light dark" />
 <title>POWER LAB · Симулятор электроснабжения дома</title>
 <style>
 :root{--bg:#09101b;--bg2:#101b2b;--card:#101d2d;--card2:#142337;--border:#26384e;--text:#eef5ff;--muted:#93a7bd;--dim:#647990;--red:#fc677b;--blue:#51a6ff;--green:#39d69a;--amber:#ffbd67;--purple:#b4a1ff;--off:#4e6175;--shadow:0 18px 40px #03081260}
@@ -34,11 +34,53 @@ html{color-scheme:light}body{background:#eef2f5;color:var(--text);font-family:In
 .diagram-head{padding:16px 17px 11px}.diagram-head .eyebrow{color:#0e9d8d}.diagram-head .title-row{color:#203c4d}.diagram-stage{background:#f7f9fa;margin:0 12px 10px;border:1px solid #e0e9ee;border-radius:11px;overflow:hidden}.stage-label{display:flex;align-items:center;gap:9px;padding:9px 13px;background:#f9fbfc;border-bottom:1px solid #e5edf1;font:700 10px ui-monospace,monospace;letter-spacing:.07em;color:#587787}.stage-label span:last-child{margin-left:auto;font-weight:500;color:#9aabb6}.diagram-scroll{padding:0;scrollbar-color:#c4d4df #f5f8fa}.diagram-svg{background:#f8fafb;border:0;border-radius:0}.grid-bg{stroke:#e3edf2;opacity:.85}.diagram-svg .device rect.main{fill:#fff;stroke:#b5c8d3;filter:drop-shadow(0 4px 6px #24435513)}.diagram-svg .device text.name{fill:#213e50}.diagram-svg .device text.minor{fill:#698696}.diagram-svg .device text.micro{fill:#7c97a7}.diagram-svg .device .symbol{stroke:#25819a}.diagram-svg .header-divider{stroke:#d9e6ed}.wirebase.wire-l{stroke:#d9a4ab}.wirebase.wire-n{stroke:#a7c5e5}.wirebase.wire-pos{stroke:#e4c59e}.wirebase.wire-neg{stroke:#c5b9df}.diagram-svg .device.dragging rect.main{stroke:#0db696;filter:drop-shadow(0 6px 12px #0db69628)}.circuit-note,.disclaimer-row{color:#8398a6}
 .mini-panel{background:#fff}.status-pair{color:#6e8595}.status-pair b{color:#2a4758}.batbar{background:#e7eff2;border-color:#d8e5e9}.log{border-color:#e9eef2;color:#557080}.log time{color:#91a6b3}.log b{color:#128f9d}.timebox{color:#218e9b}.tabs{border-color:#e4edf1}.tab{color:#7b92a2}.tab.active{color:#0a9988;border-color:#0a9988}.details h3{color:#2a4758}.details p,.help-list{color:#718897}.term-table th{color:#879eac;border-color:#e6eef2}.term-table td{color:#4b6979;border-color:#e8eef2}.term-table tr:hover td{background:#f4f8fa}.pill{background:#edf7f7;border-color:#d2e9e9;color:#168487}.mono{color:#15849c}.foot{color:#899eac}
 @media(max-width:1150px){.workspace{grid-template-columns:260px minmax(0,1fr)}.shell{padding:0 15px 32px}.topline{margin:0 -15px 22px;padding:14px 15px}}@media(max-width:950px){.workspace{grid-template-columns:1fr}.control-panel{position:static;max-height:none}.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.sidebar-note{grid-column:1/-1}}@media(max-width:650px){.shell{padding:0 10px 25px}.topline{margin:0 -10px 20px;padding:12px 10px}.overview-heading h1{font-size:21px}.overview-heading p{font-size:11px}.overview-live{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi{min-height:91px;padding:12px}.kpi .big{font-size:22px}.controls{display:block}.mini-boxes{grid-template-columns:1fr}.diagram-scroll{height:470px}.diagram-head{align-items:flex-start;flex-wrap:wrap}.stage-label{font-size:9px}}
+
+/* shadcn/ui-compatible semantic design tokens */
+:root,[data-theme=light]{
+--background:210 25% 97%;--foreground:210 35% 14%;--card:0 0% 100%;--card-foreground:210 35% 14%;--popover:0 0% 100%;--popover-foreground:210 35% 14%;--primary:173 76% 34%;--primary-foreground:0 0% 100%;--secondary:210 20% 94%;--secondary-foreground:210 30% 24%;--muted-token:210 20% 94%;--muted-foreground:210 12% 43%;--accent:173 24% 92%;--accent-foreground:173 75% 24%;--destructive:0 75% 56%;--destructive-foreground:0 0% 100%;--border-token:210 19% 87%;--input-token:210 19% 87%;--ring:173 76% 34%;--radius:.625rem;
+--surface:#fff;--surface-soft:#f7f9fb;--surface-hover:#eff5f6;--ink:#1a303d;--ink-soft:#526b7b;--ink-muted:#8397a5;--stroke:#dce5eb;--stroke-soft:#e8eef2;--stage:#f8fafb;--grid-dot:#d9e6ed;--device-fill:#fff;--device-stroke:#b5c8d3;--shadow-ui:0 8px 28px #1936460c;--positive:#0eae8a;--warning:#e5a449;
+}
+[data-theme=dark]{
+color-scheme:dark;
+--background:218 28% 8%;--foreground:210 22% 94%;--card:217 24% 12%;--card-foreground:210 22% 94%;--popover:217 24% 12%;--popover-foreground:210 22% 94%;--primary:169 65% 53%;--primary-foreground:215 40% 8%;--secondary:216 20% 18%;--secondary-foreground:210 18% 89%;--muted-token:216 20% 18%;--muted-foreground:215 13% 66%;--accent:172 25% 19%;--accent-foreground:169 70% 77%;--destructive:0 68% 58%;--destructive-foreground:0 0% 100%;--border-token:216 18% 23%;--input-token:216 18% 23%;--ring:169 65% 53%;
+--surface:#16212d;--surface-soft:#1a2835;--surface-hover:#233847;--ink:#e9f2f7;--ink-soft:#b2c5d1;--ink-muted:#8fa6b7;--stroke:#344758;--stroke-soft:#2b3d4d;--stage:#111d29;--grid-dot:#304456;--device-fill:#1e3040;--device-stroke:#567083;--shadow-ui:0 8px 28px #03080f40;--positive:#4cdbb8;--warning:#edb868;
+}
+body{background:hsl(var(--background));color:hsl(var(--foreground));transition:background .22s,color .22s}
+.topline,.kpi,.panel,.mini-panel,.scenario-dock,.chip,.round-btn,.tinybtn{background:var(--surface);color:var(--ink);border-color:var(--stroke);box-shadow:var(--shadow-ui)}
+.topline{border-bottom-color:var(--stroke);box-shadow:0 2px 15px #00000009}
+.brand,.overview-heading h1,.kpi .big,.panel-head h3,.mini-panel h3,.details h3,.section-title h2,.control label,.control-title,.status-pair b{color:var(--ink)}
+.desc,.overview-heading p,.hint,.tiny,.eyebrow,.sub,.control .meta,.scale,.circuit-note,.disclaimer-row,.foot,.details p,.help-list{color:var(--ink-muted)}
+.panel-head,.stage-label{background:var(--surface-soft);border-color:var(--stroke-soft)}
+.control,.tabs,.log,.term-table td,.term-table th{border-color:var(--stroke-soft)}
+.control .meta,.status-pair,.log,.term-table td{color:var(--ink-soft)}
+.round-btn:hover,.tinybtn:hover,.scenario:hover{background:var(--surface-hover);color:var(--ink)}
+.scenario,.segmented,.field-select,.rating-grid input{background:var(--surface-soft);border-color:var(--stroke);color:var(--ink-soft)}
+.scenario.active{background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-color:hsl(var(--primary))}
+.segmented button{color:var(--ink-muted)}.segmented button.selected{background:var(--surface);color:var(--ink)}
+.toggle{background:var(--stroke);border-color:var(--stroke)}.toggle[aria-checked=true]{background:var(--positive);border-color:var(--positive)}
+.field-select,.rating-grid input{color:var(--ink)}.val,.overview-kicker{color:var(--positive)}input[type=range]{accent-color:var(--positive)}
+.diagram-stage,.diagram-svg{background:var(--stage);border-color:var(--stroke)}
+.diagram-svg .device rect.main{fill:var(--device-fill);stroke:var(--device-stroke)}
+.diagram-svg .device text.name{fill:var(--ink)}.diagram-svg .device text.minor{fill:var(--ink-soft)}.diagram-svg .device text.micro{fill:var(--ink-muted)}
+.diagram-svg .device .header-divider{stroke:var(--stroke)}.diagram-svg .device .symbol{stroke:var(--positive)}
+.stage-label,.scenario-dock .section-title h2{color:var(--ink-soft)}
+.grid-bg{stroke:var(--grid-dot)}
+.diagram-svg pattern circle{fill:var(--grid-dot)}
+.diagram-svg rect[fill="url(#dots)"]{opacity:.35}
+.batbar{background:var(--stroke-soft);border-color:var(--stroke)}.tabs .tab{color:var(--ink-muted)}.tabs .tab.active{color:var(--positive);border-color:var(--positive)}
+.term-table tr:hover td{background:var(--surface-hover)}.pill{background:var(--surface-soft);color:var(--positive);border-color:var(--stroke)}
+.rating-results{background:var(--surface-soft)!important;color:var(--ink-soft)!important;border-color:var(--stroke)!important}
+.rating-grid label{color:var(--ink-soft)}.sidebar-note,.callout{background:var(--surface-soft);border-color:var(--stroke);color:var(--ink-soft)}
+.overview-live{background:var(--surface);border-color:var(--stroke);color:var(--positive)}
+.theme-toggle{display:inline-flex;align-items:center;gap:7px;min-width:104px;justify-content:center}
+.theme-toggle [data-lucide]{width:15px;height:15px}
+:where(button,input,select):focus-visible{outline:2px solid hsl(var(--ring));outline-offset:2px}
+@media(prefers-reduced-motion:reduce){body,.wireflow,.live-pulse{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="shell">
-<header class="topline"><div class="identity"><div class="mark"><span data-lucide="zap"></span></div><div><div class="brand">POWER<span>LAB</span> <span style="font-size:11px;letter-spacing:0;color:#7793aa;font-weight:500">/ HOME BACKUP</span></div><div class="desc">Интерактивная модель питания · 230 В · L / N · автономный HTML</div></div></div><div class="top-actions"><span class="chip"><i class="led yes" id="systemLed"></i><span id="systemShort">Система готова</span></span><button class="round-btn" id="resetBtn" type="button"><span data-lucide="rotate-ccw"></span> Сбросить</button></div></header>
+<header class="topline"><div class="identity"><div class="mark"><span data-lucide="zap"></span></div><div><div class="brand">POWER<span>LAB</span> <span style="font-size:11px;letter-spacing:0;color:#7793aa;font-weight:500">/ HOME BACKUP</span></div><div class="desc">Интерактивная модель питания · 230 В · L / N · автономный HTML</div></div></div><div class="top-actions"><button class="round-btn theme-toggle" id="themeToggle" type="button" aria-label="Переключить тему" title="Переключить светлую и тёмную темы"><span data-lucide="moon" id="themeIcon"></span><span id="themeLabel">Тёмная</span></button><span class="chip"><i class="led yes" id="systemLed"></i><span id="systemShort">Система готова</span></span><button class="round-btn" id="resetBtn" type="button"><span data-lucide="rotate-ccw"></span> Сбросить</button></div></header>
 <div class="overview-heading"><div><div class="overview-kicker">SYSTEM OVERVIEW / 01</div><h1>Центр управления питанием</h1><p>Состояние сети, резерва и накопителя в реальном времени</p></div><div class="overview-live"><span class="live-pulse"></span> LIVE SIMULATION</div></div><section class="kpis" aria-label="Показатели системы">
 <div class="kpi"><div class="eyebrow">Городская сеть</div><div class="big" id="kGrid">230 В</div><div class="sub" id="kGridSub">Стабилизатор в норме</div></div>
 <div class="kpi"><div class="eyebrow">Питание дома</div><div class="big" id="kHome">СЕТЬ</div><div class="sub" id="kHomeSub">1.8 кВт · через АВР</div></div>
@@ -421,5 +463,14 @@ scroll.addEventListener('touchend',e=>{if(e.touches.length<2)gesture=null;});
 paintIcons();
 renderStaticDiagram();syncControls();setTab('overview');fitDiagram();update(true);addLog('Симулятор запущен. Сеть и инвертор готовы.');requestAnimationFrame(ts=>{lastFrame=ts;requestAnimationFrame(animate)});
 </script>
-</body>
+<script>
+(function(){
+const key='powerlab-theme';
+let saved;try{saved=localStorage.getItem(key)}catch(e){}
+const system=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+let mode=saved==='dark'||saved==='light'?saved:system;
+const apply=()=>{document.documentElement.dataset.theme=mode;const b=document.getElementById('themeToggle');const l=document.getElementById('themeLabel');if(l)l.textContent=mode==='dark'?'Светлая':'Тёмная';if(b){b.setAttribute('aria-label',mode==='dark'?'Включить светлую тему':'Включить тёмную тему');b.setAttribute('aria-pressed',String(mode==='dark'))}const i=document.getElementById('themeIcon');if(i){i.setAttribute('data-lucide',mode==='dark'?'sun':'moon');if(window.lucide&&lucide.createIcons)lucide.createIcons()};};
+apply();document.getElementById('themeToggle')?.addEventListener('click',()=>{mode=mode==='dark'?'light':'dark';try{localStorage.setItem(key,mode)}catch(e){}apply()});
+})();
+</script></body>
 </html>
