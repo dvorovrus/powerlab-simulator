@@ -1,72 +1,36 @@
+import {LIMIT,INITIAL,scenarios,calculatePower} from './engine/electrical';
 import { constrainDevice, canvasSize } from './engine/canvas';
 
 'use strict';
-const $=id=>document.getElementById(id);
+const $=(id:string):any=>document.getElementById(id);
+const $$=(selector:string):NodeListOf<any>=>document.querySelectorAll(selector);
 const R={GRID:'grid',GEN:'generator',INV:'inverter'};
-const LIMIT={STAB:12,GEN:2.8,INV:9,CHARGE:1.0,CAP:15,MIN_SOC:5,LOW_V:90,HIGH_V:310};
+
 const RATINGS=[6,10,16,20,25,32,40,50,63,80,100,125,160,200,250];
 function nextRating(amps){return RATINGS.find(x=>x>=amps)||'>250';}
 function ratingUpdate(){
  const v=Number($('ratedVoltage').value)||230;
  const gen=LIMIT.GEN*1000/v,inv=LIMIT.INV*1000/v,charge=LIMIT.CHARGE*1000/v,grid=LIMIT.STAB*1000/v;
  const rows=[['QF1 · сеть / стабилизатор',grid],['QF2 · генератор',gen],['QF3 · заряд AC IN',charge],['QF4 · дом / выход',Math.max(grid,gen,inv)],['АВР I–0–II · сеть / инвертор',Math.max(grid,inv)],['АВР генератор / резерв',Math.max(gen,inv)]];
- $('ratingResults').innerHTML=rows.map(([n,a])=>`<div class="rr"><span>${n}</span><strong>${a.toFixed(1)} А → ≥ ${nextRating(a)} А*</strong></div>`).join('')+'<div style="margin-top:6px;color:#a9b9c8">* Ближайший стандартный ток аппарата — только предварительный ориентир по пропускной способности, не назначенный номинал автомата. Для QF4/АВР нужен расчёт реальной нагрузки и паспортного тока. Номинал IEK выбирается по току AC IN и паспорту конкретной модели.</div>';
- document.querySelectorAll('.device-group').forEach(()=>{});
+ $('ratingResults').innerHTML=rows.map(([n,a])=>`<div class="rr"><span>${n}</span><strong>${Number(a).toFixed(1)} А → ≥ ${nextRating(a)} А*</strong></div>`).join('')+'<div style="margin-top:6px;color:#a9b9c8">* Ближайший стандартный ток аппарата — только предварительный ориентир по пропускной способности, не назначенный номинал автомата. Для QF4/АВР нужен расчёт реальной нагрузки и паспортного тока. Номинал IEK выбирается по току AC IN и паспорту конкретной модели.</div>';
+ $$('.device-group').forEach(()=>{});
 }
-for(const [id,key] of [['pGen','GEN'],['pInv','INV'],['pCap','CAP'],['pStab','STAB'],['pCharge','CHARGE']]){document.addEventListener('input',e=>{if(e.target.id!==id)return;const n=Number(e.target.value);if(!Number.isFinite(n)||n<=0)return;LIMIT[key]=n;ratingUpdate();onChanged();});}
-document.addEventListener('input',e=>{if(e.target.id==='ratedVoltage')ratingUpdate();});
-const INITIAL={grid:true,voltage:230,generator:false,inverter:true,atsMode:'auto',atsManual:'grid',chargerMode:'grid',chargeEnabled:true,qfGrid:true,qfGen:true,qfCharge:true,qfHome:true,soc:65,load:1.8,speed:1};
-let state={...INITIAL}, activeScenario='normal',simSeconds=0,lastFrame=performance.now(),lastPaint=0,lastSignature='',selectedTerminal=null,activeTab='overview',latest=null;
-const scenarios={
- normal:{...INITIAL},
- outage:{...INITIAL,grid:false,soc:68},
- generator:{...INITIAL,grid:false,generator:true,atsMode:'manual',atsManual:'generator',chargeEnabled:false,soc:45},
- gencharge:{...INITIAL,grid:false,generator:true,atsMode:'manual',atsManual:'generator',chargerMode:'generator',soc:38},
- lowbat:{...INITIAL,grid:false,generator:false,soc:3},
- lowvoltage:{...INITIAL,grid:true,voltage:155,soc:62},
- restore:{...INITIAL,grid:true,generator:true,soc:35},
- overload:{...INITIAL,grid:false,generator:true,load:10.5,soc:55}
-};
+for(const [id,key] of [['pGen','GEN'],['pInv','INV'],['pCap','CAP'],['pStab','STAB'],['pCharge','CHARGE']]){document.addEventListener('input',e=>{if((e.target as HTMLInputElement).id!==id)return;const n=Number((e.target as HTMLInputElement).value);if(!Number.isFinite(n)||n<=0)return;LIMIT[key]=n;ratingUpdate();onChanged();});}
+document.addEventListener('input',e=>{if((e.target as HTMLInputElement).id==='ratedVoltage')ratingUpdate();});
+let state:any={...INITIAL}, activeScenario='normal',simSeconds=0,lastFrame=performance.now(),lastPaint=0,lastSignature='',selectedTerminal:any=null,activeTab='overview',latest:any=null;
+
 const names={grid:'Городская сеть',inverter:'Инвертор / АКБ',generator:'Генератор',none:'Нет питания'};
 const fmt=n=>Number(n).toFixed(1),clock=()=>String(Math.floor(simSeconds/3600)).padStart(2,'0')+':'+String(Math.floor(simSeconds/60)%60).padStart(2,'0');
-function calc(){
- const gridPhysical=state.grid,gridFeed=state.grid&&state.qfGrid, gridSafe=gridFeed && state.voltage>=LIMIT.LOW_V&&state.voltage<=LIMIT.HIGH_V;
- const gridOk=gridSafe&&state.load<=LIMIT.STAB,genReady=state.generator,genFeed=genReady&&state.qfGen,genOk=genFeed&&state.load<=LIMIT.GEN,invReady=state.inverter&&state.soc>LIMIT.MIN_SOC,invOk=invReady&&state.load<=LIMIT.INV;
- const ok={grid:gridOk,inverter:invOk,generator:genOk};
- let source='none';
- if(state.atsMode==='auto') source=['grid','inverter','generator'].find(x=>ok[x])||'none';
- else source=ok[state.atsManual]?state.atsManual:'none';
- const atsSource=source;if(!state.qfHome)source='none';
- let desiredCharge=state.chargerMode;
- if(!state.inverter||!state.chargeEnabled||!state.qfCharge||state.chargerMode==='off') desiredCharge='none';
- if(desiredCharge==='grid'&&!gridSafe)desiredCharge='none';
- if(desiredCharge==='generator'&&!genFeed)desiredCharge='none';
- const blocking=source==='inverter'&&desiredCharge!=='none';
- let chargeFrom=blocking?'none':desiredCharge;
- const sourceLoad={grid:source==='grid'?state.load:0,generator:source==='generator'?state.load:0};
- const remaining=chargeFrom==='grid'?LIMIT.STAB-sourceLoad.grid:chargeFrom==='generator'?LIMIT.GEN-sourceLoad.generator:0;
- const chargePower=(chargeFrom==='none'||state.soc>=99.95)?0:Math.max(0,Math.min(LIMIT.CHARGE,remaining));
- const dischargePower=source==='inverter'?state.load/0.9:0;
- let warnings=[];
- if(gridFeed&&!gridSafe)warnings.push('Напряжение за диапазоном стабилизатора (90–310 В)');
- if(!state.qfHome)warnings.push('QF4 отключён: линии дома обесточены');
- else if(!source || source==='none')warnings.push('Дом обесточен: нет доступного источника необходимой мощности');
- if(genFeed&&state.load>LIMIT.GEN&&source!=='grid')warnings.push('Нагрузка превышает мощность генератора '+fmt(LIMIT.GEN)+' кВт');
- if(state.load>LIMIT.INV&&!gridOk)warnings.push('Для инвертора нагрузка выше лимита '+fmt(LIMIT.INV)+' кВт');
- if(blocking)warnings.push('Заряд через AC IN блокирован при работе AC OUT на дом (модельное ограничение)');
- if(state.soc<=LIMIT.MIN_SOC)warnings.push('АКБ ниже резервного порога 5%');
- if(desiredCharge!=='none' && source!=='inverter' && chargePower===0 && state.soc<99.95)warnings.push('Нет доступной мощности для зарядки');
- return {gridPhysical,gridFeed,gridSafe,gridOk,genReady,genFeed,genOk,invReady,invOk,source,atsSource,desiredCharge,chargeFrom,chargePower,dischargePower,remaining,blocking,warnings,
- flow:{grid_qf:gridPhysical,qf_stab:gridFeed,stab_charge:chargeFrom==='grid'&&chargePower>0,gen_qf:genReady,qf_gen_charge:chargeFrom==='generator'&&chargePower>0,charge_qf:chargeFrom!=='none'&&chargePower>0,qf_inv:chargeFrom!=='none'&&chargePower>0,stab_ats:atsSource==='grid',qf_gen_ats:atsSource==='generator',inv_ats:atsSource==='inverter',ats_qf:atsSource!=='none'&&state.qfHome,qf_home:source!=='none',inv_battery:chargePower>0 || dischargePower>0}};
-}
+function calc(){return calculatePower(state);}
+
 function setScenario(name){if(!scenarios[name])return;state={...scenarios[name],speed:state.speed};activeScenario=name;simSeconds=0;lastSignature='';setTab('overview');syncControls();update(true);addLog('Сценарий: '+document.querySelector('[data-scenario="'+name+'"]').textContent.replace(/^\d+/,'').trim(),'mode');}
 function syncControls(){ratingUpdate();for(const [id,k] of [['gridSwitch','grid'],['genSwitch','generator'],['invSwitch','inverter'],['chargeSwitch','chargeEnabled'],['qfGridSwitch','qfGrid'],['qfGenSwitch','qfGen'],['qfChargeSwitch','qfCharge'],['qfHomeSwitch','qfHome']])$(id).setAttribute('aria-checked',String(state[k]));$('voltage').value=state.voltage;$('voltageText').textContent=state.voltage+' В';$('soc').value=state.soc;$('socText').textContent=fmt(state.soc)+'%';$('load').value=state.load;$('loadText').textContent=fmt(state.load)+' кВт';$('atsAutoFlag').textContent=state.atsMode.toUpperCase();$('chargeFlag').textContent=state.chargerMode==='off'?'0':state.chargerMode==='generator'?'II':'I';
- document.querySelectorAll('[data-control]').forEach(group=>{const key=group.dataset.control;group.querySelectorAll('button[data-value]').forEach(btn=>btn.classList.toggle('selected',String(state[key])===btn.dataset.value));});
- $('atsManual').style.opacity=state.atsMode==='manual'?'1':'.55';document.querySelectorAll('[data-scenario]').forEach(b=>b.classList.toggle('active',b.dataset.scenario===activeScenario));}
+ $$('[data-control]').forEach(group=>{const key=group.dataset.control;group.querySelectorAll('button[data-value]').forEach(btn=>btn.classList.toggle('selected',String(state[key])===btn.dataset.value));});
+ $('atsManual').style.opacity=state.atsMode==='manual'?'1':'.55';$$('[data-scenario]').forEach(b=>b.classList.toggle('active',b.dataset.scenario===activeScenario));}
 function onChanged(){activeScenario='';syncControls();update(true);}
 ['gridSwitch','genSwitch','invSwitch','chargeSwitch','qfGridSwitch','qfGenSwitch','qfChargeSwitch','qfHomeSwitch'].forEach((id,i)=>{const key=['grid','generator','inverter','chargeEnabled','qfGrid','qfGen','qfCharge','qfHome'][i];$(id).addEventListener('click',()=>{state[key]=!state[key];onChanged();addLog({grid:'Городская сеть',generator:'Генератор',inverter:'Инвертор',chargeEnabled:'Зарядное устройство',qfGrid:'QF1 сеть',qfGen:'QF2 генератор',qfCharge:'QF3 AC IN',qfHome:'QF4 дом'}[key]+': '+(state[key]?'включено':'выключено'));});});
-for(const [id,key] of [['voltage','voltage'],['soc','soc'],['load','load']])$(id).addEventListener('input',e=>{state[key]=Number(e.target.value);onChanged();});
-document.querySelectorAll('[data-control] button').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.parentElement.dataset.control;state[key]=key==='speed'?Number(btn.dataset.value):btn.dataset.value;onChanged();if(key!=='speed')addLog('Режим '+key+': '+btn.textContent); }));
+for(const [id,key] of [['voltage','voltage'],['soc','soc'],['load','load']])$(id).addEventListener('input',e=>{state[key]=Number((e.target as HTMLInputElement).value);onChanged();});
+$$('[data-control] button').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.parentElement.dataset.control;state[key]=key==='speed'?Number(btn.dataset.value):btn.dataset.value;onChanged();if(key!=='speed')addLog('Режим '+key+': '+btn.textContent); }));
 $('scenarioBar').addEventListener('click',e=>{const b=e.target.closest('[data-scenario]');if(b)setScenario(b.dataset.scenario)});
 $('resetBtn').addEventListener('click',()=>setScenario('normal'));
 $('showTerminals').addEventListener('click',()=>{setTab('terminals');$('details').scrollIntoView({behavior:'smooth',block:'start'});});
@@ -159,7 +123,7 @@ function buildBlocked(){const blocked=new Uint8Array(ROUTE_W*ROUTE_H);const boxe
   if(boxes.some(b=>x>=b.x&&x<=b.x2&&y>=b.y&&y<=b.y2))blocked[row*ROUTE_W+col]=1;
  }return blocked;
 }
-class MinHeap{constructor(){this.a=[]}push(item){const a=this.a;a.push(item);let i=a.length-1;while(i>0){let p=(i-1)>>1;if(a[p].f<=item.f)break;a[i]=a[p];i=p}a[i]=item}pop(){const a=this.a,head=a[0],last=a.pop();if(a.length){let i=0;while(i*2+1<a.length){let c=i*2+1;if(c+1<a.length&&a[c+1].f<a[c].f)c++;if(last.f<=a[c].f)break;a[i]=a[c];i=c}a[i]=last}return head}get length(){return this.a.length}}
+class MinHeap{a:any[];constructor(){this.a=[]}push(item){const a=this.a;a.push(item);let i=a.length-1;while(i>0){let p=(i-1)>>1;if(a[p].f<=item.f)break;a[i]=a[p];i=p}a[i]=item}pop(){const a=this.a,head=a[0],last=a.pop();if(a.length){let i=0;while(i*2+1<a.length){let c=i*2+1;if(c+1<a.length&&a[c+1].f<a[c].f)c++;if(last.f<=a[c].f)break;a[i]=a[c];i=c}a[i]=last}return head}get length(){return this.a.length}}
 function searchManhattan(a,b,blocked){const start=a.y*ROUTE_W+a.x,end=b.y*ROUTE_W+b.x;
  const total=ROUTE_W*ROUTE_H*5,cost=new Float32Array(total).fill(Infinity),parent=new Int32Array(total).fill(-1),heap=new MinHeap();
  // Direction 4 means start, directions 0..3 are right, down, left, up.
@@ -240,7 +204,7 @@ const lucidePaths={
  'plug-zap':'<path d="m13 2-3 8h7l-6 12 1-9H5z"/>'
 };
 function iconHTML(name,cls='ico'){return `<svg class="${cls}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${lucidePaths[name]||lucidePaths.zap}</svg>`;}
-function paintIcons(){document.querySelectorAll('[data-lucide]').forEach(el=>el.outerHTML=iconHTML(el.dataset.lucide));}
+function paintIcons(){$$('[data-lucide]').forEach(el=>el.outerHTML=iconHTML(el.dataset.lucide));}
 function deviceIcon(id,x,y,size=20){const map={grid:'radio-tower',stab:'gauge',generator:'fuel',selector:'arrow-left-right',inverter:'cpu',battery:'battery-charging',ats:'split',home:'house',qfgrid:'shield-check',qfgen:'shield-check',qfcharge:'shield-check',qfhome:'shield-check'};
 return `<svg class="node-icon" x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="#9bc7e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">${lucidePaths[map[id]||'zap']}</svg>`;}
 function renderStaticDiagram(){
@@ -248,14 +212,14 @@ function renderStaticDiagram(){
  $('flowLabels').innerHTML=''; // Labels now sit inside devices, clear of draggable routes.
  $('blockLayer').innerHTML=devicePaths.map(d=>{
  const {x,y,w,h,id}=d,cx=x+w/2;let ex='';
- if(id==='grid')ex=`<g class="device-content"><g class="lucide-diagram-icon" transform="translate(${x+45} ${y+72}) scale(2.25)" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V2"/><path d="M8 6h8"/><path d="M5 10h14"/><path d="M3 14h18"/><path d="m8 6-3 4"/><path d="m16 6 3 4"/><path d="m5 14 7 8 7-8"/></g><text x="${x+131}" y="${y+101}" text-anchor="middle" font-size="16" font-weight="750" fill="#76cdfd">230 В</text></g>`;
+ if(id==='grid')ex=`<g class="device-content"><g class="lucide-diagram-icon" transform="translate(${x+45} ${y+72}) scale(2.25)" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${lucidePaths['radio-tower']}</g><text x="${x+131}" y="${y+101}" text-anchor="middle" font-size="16" font-weight="750" fill="#76cdfd">230 В</text></g>`;
  if(id==='stab')ex=`<g class="device-content"><rect class="minor-box" x="${cx-53}" y="${y+71}" width="106" height="35" rx="7"/><text id="svgStabVoltage" x="${cx}" y="${y+94}" fill="#65f1c3" text-anchor="middle" font-size="16" font-weight="750">230 В</text></g>`;
- if(id==='generator')ex=`<g class="device-content" id="generatorSpinner"><g class="generator-fan" transform="translate(${cx} ${y+94})"><g class="spinner"><circle cx="0" cy="0" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M0 -2a5 5 0 0 1-5-5c0-4 4-8 8-8 5 0 8 5 6 9M2 0a5 5 0 0 1 5-5c4 0 8 4 8 8 0 5-5 8-9 6M0 2a5 5 0 0 1 5 5c0 4-4 8-8 8-5 0-8-5-6-9M-2 0a5 5 0 0 1-5 5c-4 0-8-4-8-8 0-5 5-8 9-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></g></g>`;
+  if(id==='generator')ex=`<g class="device-content" id="generatorSpinner"><g class="generator-fan" transform="translate(${cx} ${y+94})"><g class="spinner"><g transform="scale(1.28) translate(-12 -12)" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.827 16.379a6.082 6.082 0 0 1-8.618-7.002l5.412 1.45a6.082 6.082 0 0 1 7.002-8.618l-1.45 5.412a6.082 6.082 0 0 1 8.618 7.002l-5.412-1.45a6.082 6.082 0 0 1-7.002 8.618l1.45-5.412Z"/><path d="M12 12v.01"/></g></g></g></g>`;
  if(id==='selector')ex=`<g class="device-content"><rect class="minor-box" x="${cx-63}" y="${y+78}" width="126" height="41" rx="7"/><text id="svgSelector" x="${cx}" y="${y+105}" text-anchor="middle" font-size="13" font-weight="700" fill="#c1dcf2">I / 0 / II</text><text x="${cx}" y="${y+139}" text-anchor="middle" font-size="10" fill="#7b9db8">РУЧНОЕ ПЕРЕКЛЮЧЕНИЕ</text></g>`;
  if(id==='inverter')ex=`<g class="device-content"><rect class="minor-box" x="${cx-70}" y="${y+82}" width="140" height="69" rx="9"/><path d="M${cx-54} ${y+117} Q${cx-42} ${y+90} ${cx-28} ${y+117} T${cx+5} ${y+117} T${cx+38} ${y+117} T${cx+54} ${y+117}" stroke="#59eebd" fill="none" stroke-width="2.5"/><text x="${cx}" y="${y+179}" font-size="11" fill="#a4c5e1" text-anchor="middle" id="svgInvText">ОЖИДАНИЕ</text><text x="${cx}" y="${y+199}" text-anchor="middle" font-size="11" fill="#829cb4">AC IN / AC OUT</text></g>`;
  if(id==='battery')ex=`<g class="device-content"><text x="${cx}" y="${y+82}" text-anchor="middle" font-size="20" font-weight="800" fill="#85eac7" id="svgSoc">65%</text><rect x="${cx-29}" y="${y+99}" width="58" height="29" rx="5" fill="#17283b" stroke="#46647a"/><rect x="${cx+29}" y="${y+106}" width="6" height="14" rx="2" fill="#46647a"/><rect id="svgBatteryFill" x="${cx-25}" y="${y+103}" width="35" height="21" rx="3" fill="#39d69a"/></g>`;
  if(id==='ats')ex=`<g class="device-content"><rect class="minor-box" x="${cx-78}" y="${y+78}" width="156" height="47" rx="9"/><text id="svgAts" x="${cx}" y="${y+107}" font-size="14" font-weight="760" text-anchor="middle" fill="#adccdf">I / II / III</text><text x="${cx}" y="${y+140}" text-anchor="middle" font-size="10" fill="#91adbf">АВР-1 СЕТЬ/ИНВ · АВР-2 /ГЕН</text></g>`;
- if(id==='home')ex=`<g class="device-content"><g class="lucide-diagram-icon" transform="translate(${cx-25} ${y+69}) scale(2.1)" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-8h6v8"/></g><text x="${cx}" y="${y+132}" text-anchor="middle" font-size="11" fill="#9bb6ca" id="svgHomeText">1.8 кВт</text><rect x="${cx-62}" y="${y+137}" width="124" height="10" rx="3" fill="#172b43" stroke="#4d779e"/><text x="${cx}" y="${y+145}" text-anchor="middle" font-size="8" fill="#86b9f4">N — шина резерва</text></g>`;
+ if(id==='home')ex=`<g class="device-content"><g class="lucide-diagram-icon" transform="translate(${cx-25} ${y+69}) scale(2.1)" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${lucidePaths.house}</g><text x="${cx}" y="${y+132}" text-anchor="middle" font-size="11" fill="#9bb6ca" id="svgHomeText">1.8 кВт</text><rect x="${cx-62}" y="${y+137}" width="124" height="10" rx="3" fill="#172b43" stroke="#4d779e"/><text x="${cx}" y="${y+145}" text-anchor="middle" font-size="8" fill="#86b9f4">N — шина резерва</text></g>`;
  if(id.startsWith('qf'))ex=`<g class="device-content"><rect x="${cx-9}" y="${y+63}" width="18" height="17" rx="2" fill="#172a40" stroke="#52738d"/><path id="lever-${id}" d="M${cx-4} ${y+75}l8 -8" stroke="#46d6a6" stroke-width="3" stroke-linecap="round"/></g>`;
  const footer=id==='home'?'':`<text class="micro" x="${cx}" y="${y+h-13}" text-anchor="middle">${escapeHTML(d.state)}</text>`;
  return `<g class="device" id="dev-${id}" tabindex="0" data-device="${id}" role="button" aria-label="${escapeHTML(d.title)}: перетаскивание или подробности"><rect class="main" x="${x}" y="${y}" width="${w}" height="${h}" rx="15"/><circle class="state-dot" cx="${x+w-15}" cy="${y+14}" r="4.5"/><text class="name" x="${cx}" y="${y+27}" text-anchor="middle" data-fit="${id}">${escapeHTML(d.title)}</text><text class="minor" x="${cx}" y="${y+47}" text-anchor="middle" data-fit="${id}">${escapeHTML(d.sub)}</text><line class="header-divider" x1="${x+13}" x2="${x+w-13}" y1="${y+57}" y2="${y+57}"/>${id.startsWith('qf')?'':deviceIcon(id,x+10,y+13,14)}${ex}${footer}</g>`;
@@ -265,7 +229,7 @@ function renderStaticDiagram(){
   const tx=special?t.x:t.x+(left?10:-10),ty=special?t.y+(d.id==='ats'?21:-10):t.y+3;
   return `<g role="button" aria-label="${escapeHTML(t.device+' '+t.port+' '+t.side)}" data-terminal="${t.id}" tabindex="0"><circle class="port-dot" data-terminal="${t.id}" cx="${t.x}" cy="${t.y}" r="6.5" fill="${t.polar==='L'?'#fc677b':t.polar==='N'?'#51a6ff':t.polar==='+'?'#ffbd67':'#b4a1ff'}"/><text class="port-tag" x="${tx}" y="${ty}" text-anchor="${special?'middle':left?'start':'end'}">${escapeHTML(t.side)}</text><title>${escapeHTML(t.device.toUpperCase()+' · '+t.port+' · '+t.side+' → '+t.relation)}</title></g>`;
  }).join('')+'</g>').join('');
- for(const d of devicePaths){applyDeviceTransform(d.id);for(const label of document.querySelectorAll(`[data-fit="${d.id}"]`)){let font=label.classList.contains('name')?(d.w<90?12:14):(d.w<90?9:11);label.style.fontSize=font+'px';while(label.getComputedTextLength()>d.w-28&&font>8){font--;label.style.fontSize=font+'px';}}}
+ for(const d of devicePaths){applyDeviceTransform(d.id);for(const label of $$(`[data-fit="${d.id}"]`)){let font=label.classList.contains('name')?(d.w<90?12:14):(d.w<90?9:11);label.style.fontSize=font+'px';while(label.getComputedTextLength()>d.w-28&&font>8){font--;label.style.fontSize=font+'px';}}}
  routeAllWires();attachDragHandlers();
  $('diagram').addEventListener('click',e=>{const t=e.target.closest('[data-terminal]');if(t){selectTerminal(t.dataset.terminal);return;}const dev=e.target.closest('[data-device]');if(dev)selectDevice(dev.dataset.device);});
  $('diagram').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const hit=e.target.closest('[data-terminal],[data-device]');if(hit){e.preventDefault();if(hit.dataset.terminal)selectTerminal(hit.dataset.terminal);else selectDevice(hit.dataset.device);}}});
@@ -280,7 +244,7 @@ function update(refreshDetails=false){const s=calc();latest=s;
  $('systemLed').className='led '+(s.source==='none'?'no':s.warnings.length?'warn':'yes');$('systemShort').textContent=s.source==='none'?'Дом обесточен':s.warnings.length?'Есть ограничения':'Питание в норме';
  $('activeSource').textContent=names[s.source];$('activeCharge').textContent=s.chargePower>0?(s.chargeFrom==='grid'?'Стабилизатор · 230 В':'Генератор · 230 В'):'Не заряжается';$('activeLoad').textContent=fmt(s.source==='none'?0:state.load)+' кВт / запрос '+fmt(state.load);let balance=s.chargePower-s.dischargePower;$('batteryBalance').textContent=(balance>0?'+':'')+fmt(balance)+' кВт';$('batteryBalance').style.color=balance>0?'#39d69a':balance<0?'#ffbd67':'#d2e2ef';$('batteryEnergy').textContent=(state.soc*LIMIT.CAP/100).toFixed(2)+' / '+LIMIT.CAP.toFixed(2)+' кВт·ч';$('batteryFill').style.width=state.soc+'%';$('batteryFill').classList.toggle('charging',s.chargePower>0);$('warnings').textContent=s.warnings.length?s.warnings[0]:'Нет критических событий';$('warnings').style.color=s.warnings.length?'#ffbd67':'#39d69a';$('simTime').textContent=clock();
  // SVG highlights and animated live conductor segments.
- document.querySelectorAll('[data-flow]').forEach(p=>{p.classList.toggle('on',!!s.flow[p.dataset.flow]);p.classList.toggle('reverse',p.dataset.flow==='inv_battery'&&s.dischargePower>0);});
+ $$('[data-flow]').forEach(p=>{p.classList.toggle('on',!!s.flow[p.dataset.flow]);p.classList.toggle('reverse',p.dataset.flow==='inv_battery'&&s.dischargePower>0);});
  const states={qfgrid:s.gridFeed?'live':state.qfGrid?'':'warn',qfgen:s.genFeed?'live':state.qfGen?'':'warn',qfcharge:s.chargePower>0?'live':state.qfCharge?'':'warn',qfhome:s.source!=='none'?'live':state.qfHome?'':'warn',grid:state.grid?'live':'',stab:s.gridSafe?'live':state.grid?'warn':'',generator:s.genReady?'live':'',selector:s.chargePower?'live':'',inverter:(s.source==='inverter'||s.chargePower)?'live':state.inverter?'':'failed',battery:state.soc>LIMIT.MIN_SOC?'live':'warn',ats:s.atsSource!=='none'?'live':'failed',home:s.source!=='none'?'live':'failed'};
  devicePaths.forEach(d=>{if(d.id.startsWith('qf')){const lever=$('lever-'+d.id);if(lever)lever.setAttribute('stroke',state[({qfgrid:'qfGrid',qfgen:'qfGen',qfcharge:'qfCharge',qfhome:'qfHome'})[d.id]]?'#46d6a6':'#f09a77');}const el=$('dev-'+d.id);el.classList.toggle('live',states[d.id]==='live');el.classList.toggle('warn',states[d.id]==='warn');el.classList.toggle('failed',states[d.id]==='failed');el.setAttribute('aria-label',d.title+': '+statusText(d.id,s));});
  $('svgStabVoltage').textContent=s.gridSafe?'230 V':'--- V';$('svgStabVoltage').setAttribute('fill',s.gridSafe?'#65f1c3':'#eaa67d');$('svgSelector').textContent=state.chargerMode==='grid'?'I · СЕТЬ':state.chargerMode==='generator'?'II · ГЕН':'0 · ОТКЛ';$('svgInvText').textContent=s.chargePower?'ЗАРЯД '+fmt(s.chargePower)+' кВт':s.source==='inverter'?'ИНВЕРТИРУЕТ':'ОЖИДАНИЕ';$('svgAts').textContent={grid:'I · СЕТЬ',inverter:'II · ИНВ',generator:'III · ГЕН',none:'НЕТ ИСТОЧНИКА'}[s.atsSource];$('svgSoc').textContent=Math.round(state.soc)+'%';$('svgBatteryFill').setAttribute('width',Math.max(0,49*state.soc/100));$('svgBatteryFill').setAttribute('fill',s.chargePower?'#39d69a':s.dischargePower?'#ffbd67':'#66aabb');$('svgHomeText').textContent=s.source==='none'?'0 кВт':fmt(state.load)+' кВт';$('generatorSpinner').classList.toggle('spin-off',!s.genReady);$('diagram').classList.toggle('paused',state.speed===0);
@@ -288,10 +252,10 @@ function update(refreshDetails=false){const s=calc();latest=s;
  const signature=[s.source,s.chargeFrom,s.chargePower>0,s.gridSafe,s.genReady,s.warnings.join(';')].join('|');if(lastSignature&&signature!==lastSignature){if(s.source!==lastSignature.split('|')[0])addLog('АВР: '+names[s.source]);if((s.chargeFrom!==lastSignature.split('|')[1]||String(s.chargePower>0)!==lastSignature.split('|')[2]))addLog('Зарядка: '+(s.chargePower?names[s.chargeFrom]:'остановлена'));}lastSignature=signature;
  if(refreshDetails || activeTab==='selection')renderDetails();return s;
 }
-function selectTerminal(id){selectedTerminal=terminals.find(t=>t.id===id);document.querySelectorAll('.port-dot').forEach(el=>el.classList.toggle('chosen',el.dataset.terminal===id));setTab('selection');$('details').scrollIntoView({behavior:'smooth',block:'start'});}
+function selectTerminal(id){selectedTerminal=terminals.find(t=>t.id===id);$$('.port-dot').forEach(el=>el.classList.toggle('chosen',el.dataset.terminal===id));setTab('selection');$('details').scrollIntoView({behavior:'smooth',block:'start'});}
 function selectDevice(id){selectedTerminal=null;const dev=devicePaths.find(d=>d.id===id);if(dev){selectedTerminal={device:id,port:'Все клеммы',side:'L / N',relation:'',description:'Нажмите на отдельную клемму в схеме или найдите её в таблице ниже.',isDevice:true};setTab('selection');$('details').scrollIntoView({behavior:'smooth',block:'start'});}}
-function setTab(tab){activeTab=tab;document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));renderDetails();}
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+function setTab(tab){activeTab=tab;$$('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));renderDetails();}
+$$('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
 function renderDetails(){const s=latest||calc();let html='';
  if(activeTab==='overview'){
   html=`<h3>Что происходит прямо сейчас</h3><p>Чтобы изменить расположение схемы, <b>перетащите любой корпус устройства</b>. Контакты и анимированные провода переместятся вместе с ним. Кнопка «<span data-lucide="rotate-ccw"></span> Сброс блоков» восстановит первоначальный вид.</p><p>${s.source==='grid'?'Стабилизатор получает городскую сеть и подаёт питание на вход I АВР.':s.source==='inverter'?'Городской ввод недоступен для нагрузки. АВР выбрал вход II: инвертор разряжает аккумулятор и питает дом.':s.source==='generator'?'АВР выбрал вход III и питает дом от запущенного генератора.':'АВР не может подать питание в дом: выбранный источник недоступен или мощность превышена.'} ${s.chargePower>0?'Одновременно отдельный селектор подаёт на AC IN питание от '+(s.chargeFrom==='grid'?'стабилизатора':'генератора')+' для заряда аккумулятора.':'Сейчас заряд аккумулятора не идёт; IEK 1-0-2 не переключается автоматически.'}</p><div class="callout"><b>Принцип двух независимых коммутаций:</b> Система АВР (каскад двух 2P аппаратов) выбирает один из трёх источников (сеть / инвертор / генератор). Ручной IEK 1-0-2 выбирает только один источник для AC IN инвертора (сеть после стабилизатора / генератор). Выход АВР <b>никогда не соединяется</b> со входом AC IN.</div><ul class="help-list"><li>Зажмите тумблер <b>«Городская сеть»</b> в положении «выкл»: АВР перейдёт на инвертор при достаточном заряде.</li><li>Включите генератор и выберите <b>«III · Ген.»</b> в ручном режиме АВР, затем источник заряда <b>«Ген.»</b>: генератор запитает дом и зарядит АКБ.</li><li>Уменьшите заряд АКБ до 3%: инвертор перестанет быть доступным источником; при запущенном генераторе АВР сможет перейти на него в автоматическом режиме.</li><li>Изменяйте нагрузку и напряжение, чтобы увидеть ограничение мощности и диапазона стабилизации.</li></ul>`;
@@ -310,7 +274,7 @@ function renderDetails(){const s=latest||calc();let html='';
  html=`<h3>Важные ограничения симулятора</h3><div class="callout"><b>Не использовать как монтажную схему.</b> Реальные клеммы, порядок разрыва N, связь N–PE, работа защит и логика встроенного байпаса инвертора определяются паспортами оборудования и типом системы заземления.</div><ul class="help-list"><li><b>PE здесь специально не нарисован по требованию визуализации.</b> Это не означает, что его можно исключить из реального подключения. PE должен сохранять защитную непрерывность и не коммутироваться АВР.</li><li><b>Двухполюсное разделение L/N</b> в симуляции условное. Реальная коммутация нейтрали зависит от TN-C, TN-S, TN-C-S, TT, конструкции генератора и инвертора. PEN никогда не разрывают.</li><li><b>АВР-1 + АВР-2</b> — функциональный каскад двух 2P аппаратов с взаимной блокировкой источников и разрывом перед включением. Обычный двухвходовой АВР не становится трёхвходовым от добавления провода.</li><li><b>IEK 1-0-2 — ручной 2P 40 А с верхним общим контактом.</b> Его положения I/0/II нужны, чтобы AC IN получал сеть после стабилизатора или генератор, но никогда одновременно. АВР домашней нагрузки не обеспечивает этой функции сам по себе.</li><li><b>AC IN + AC OUT одновременно:</b> режимы bypass, UPS, charging while inverting у инверторов различаются. В этом симуляторе одновременный заряд через AC IN и питание дома от батарейного AC OUT заблокированы как консервативное упрощение.</li><li><b>Защита:</b> QF1–QF4 показаны условно; DC предохранители/разъединители, УЗО/дифзащита и заземление не детализированы визуально, но должны быть рассчитаны и предусмотрены в реальном щите.</li><li><b>Мощности и пределы</b> задаются в панели параметров; по умолчанию генератор 2.8 кВт, инвертор 9 кВт, АКБ 15 кВт·ч. Номиналы QF и АВР требуют инженерной проверки, расчёт здесь справочный.</li></ul>`;
  }
  $('detailBody').innerHTML=html;
- document.querySelectorAll('[data-term-row]').forEach(tr=>tr.addEventListener('click',()=>selectTerminal(tr.dataset.termRow)));
+ $$('[data-term-row]').forEach(tr=>tr.addEventListener('click',()=>selectTerminal(tr.dataset.termRow)));
 }
 function animate(ts){const delta=Math.min((ts-lastFrame)/1000,.25);lastFrame=ts;const simDelta=delta*state.speed*60;if(simDelta>0){const s=latest||calc();simSeconds+=simDelta;let net=s.chargePower*.92-s.dischargePower;let next=Math.max(0,Math.min(100,state.soc+(net/LIMIT.CAP)*100*(simDelta/3600)));if(Math.abs(next-state.soc)>0.000001){state.soc=next;}}
  if(ts-lastPaint>180){update(false);lastPaint=ts;}requestAnimationFrame(animate);}
@@ -319,7 +283,7 @@ function animate(ts){const delta=Math.min((ts-lastFrame)/1000,.25);lastFrame=ts;
 let zoom=1;
 let canvasW=1600,canvasH=755;
 function expandCanvas(){const bounds=canvasSize(devicePaths.map(d=>{const a=getOffset(d.id);return {x:d.x+a.x,y:d.y+a.y,width:d.w,height:d.h}}));let w=bounds.width,h=bounds.height;if(w===canvasW&&h===canvasH)return;canvasW=w;canvasH=h;const svg=$('diagram');svg.setAttribute('viewBox','0 0 '+canvasW+' '+canvasH);const bg=svg.querySelector('rect[fill="url(#dots)"]');if(bg){bg.setAttribute('width',canvasW);bg.setAttribute('height',canvasH)}svg.style.width=canvasW*zoom+'px';svg.style.height=canvasH*zoom+'px';ROUTE_W=Math.ceil(canvasW/ROUTE_STEP)+1;ROUTE_H=Math.ceil(canvasH/ROUTE_STEP)+1;}
-function setZoom(next,anchor){
+function setZoom(next,anchor?:any){
  const sc=$('diagramScroll'),rect=sc.getBoundingClientRect(),old=zoom;
  zoom=Math.max(.18,Math.min(2.5,Math.round(next*100)/100));
  const x=anchor?anchor.x-rect.left:sc.clientWidth/2,y=anchor?anchor.y-rect.top:sc.clientHeight/2;
@@ -330,6 +294,7 @@ function setZoom(next,anchor){
 }
 function fitDiagram(){const sc=$('diagramScroll');setZoom(Math.min(1,Math.max(.18,(sc.clientWidth-22)/canvasW)));sc.scrollLeft=0;sc.scrollTop=0;}
 $('showAll').addEventListener('click',fitDiagram);
+$('exitFullscreen').addEventListener('click',()=>{if(document.fullscreenElement)void document.exitFullscreen()});
 $('fullscreenDiagram').addEventListener('click',async()=>{const stage=$('diagramStage');try{if(document.fullscreenElement)await document.exitFullscreen();else await stage.requestFullscreen()}catch(e){addLog('Полноэкранный режим недоступен в этом браузере')}});
 $('zoomIn').addEventListener('click',()=>setZoom(zoom*1.2));$('zoomOut').addEventListener('click',()=>setZoom(zoom/1.2));$('zoomFit').addEventListener('click',fitDiagram);
 $('diagramScroll').addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZoom(zoom*(e.deltaY<0?1.12:.89),{x:e.clientX,y:e.clientY});}},{passive:false});

@@ -81,3 +81,8 @@ body{letter-spacing:-.025em}
 .diagram-svg .lucide-diagram-icon{color:var(--positive)}
 .diagram-svg .device[data-device^="qf"] .minor{font-size:8px;letter-spacing:-.045em}.diagram-svg .device[data-device^="qf"] .name{font-size:11px}.diagram-svg .device[data-device^="qf"] .micro{font-size:8px}
 .diagram-stage:fullscreen{background:var(--background,#0a1626);height:100vh;display:flex;flex-direction:column;padding:12px}.diagram-stage:fullscreen .diagram-scroll{flex:1;min-height:0;height:auto!important}.diagram-stage:fullscreen .diagram-svg{max-width:none}
+
+/* Fullscreen exit control must live inside the fullscreen element. */
+.diagram-stage { position:relative; }
+.fullscreen-exit { display:none;position:absolute;right:16px;top:16px;z-index:120;background:var(--surface,#142538);color:inherit;border:1px solid currentColor; }
+.diagram-stage:fullscreen .fullscreen-exit { display:flex;align-items:center;gap:6px; }
