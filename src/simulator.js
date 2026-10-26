@@ -137,7 +137,7 @@ t('qfcharge_ol','qfcharge','OUT','L','L',1020,147,'INVERTER · AC IN · L','L н
 t('qfhome_il','qfhome','IN','L','L',1270,560,'ATS · LOAD OUT · L','L от АВР на QF4.');t('qfhome_in','qfhome','IN','N','N',1270,585,'ATS · LOAD OUT · N','N от АВР на QF4.');
 t('qfhome_ol','qfhome','OUT','L','L',1352,560,'HOUSE · AC IN · L','L отходящих линий щита.');t('qfhome_on','qfhome','OUT','N','N',1352,585,'HOUSE · AC IN · N','N к изолированной шине резервных линий; не к общим нейтралям всех источников.');
 function escapeHTML(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
-function boundOffset(d,x,y){return {x:Math.round(Math.max(12-d.x,Math.min(1588-d.x-d.w,x))),y:Math.round(Math.max(12-d.y,Math.min(743-d.y-d.h,y)))};}
+function boundOffset(d,x,y){const margin=36;return {x:Math.round(Math.max(margin-d.x,Math.min(12000-d.x-d.w,x))),y:Math.round(Math.max(margin-d.y,Math.min(9000-d.y-d.h,y)))};}
 function getOffset(id){return deviceOffsets[id]||DEFAULT_DEVICE_OFFSETS[id]||{x:0,y:0};}
 function getWorldTerminal(t){const a=getOffset(t.device);return {x:t.x+a.x,y:t.y+a.y};}
 function getDevice(id){return devicePaths.find(d=>d.id===id);}
