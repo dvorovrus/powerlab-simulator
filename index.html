@@ -203,8 +203,8 @@ $('showTerminals').addEventListener('click',()=>{setTab('terminals');$('details'
 $('showAll').addEventListener('click',()=>{$('diagramScroll').scrollTo({left:0,behavior:'smooth'});setTab('overview');});
 function addLog(message,type=''){const wrap=$('logs');const el=document.createElement('div');el.className='log';const t=document.createElement('time');t.textContent=clock();const m=document.createElement('span');m.textContent=message;el.append(t,m);wrap.prepend(el);while(wrap.children.length>20)wrap.lastChild.remove();}
 // Drag positions are additional SVG transforms; the functional connection matrix never changes.
-const LAYOUT_KEY='power-lab-device-layout-v3';
-const deviceOffsets={};
+const LAYOUT_KEY='power-lab-device-layout-v4';
+const DEFAULT_DEVICE_OFFSETS={grid:{x:-8,y:-14},qfgrid:{x:2,y:-14},stab:{x:15,y:-14},selector:{x:8,y:-14},qfcharge:{x:17,y:-14},inverter:{x:22,y:-14},battery:{x:26,y:-14},generator:{x:-8,y:14},qfgen:{x:10,y:14},ats:{x:0,y:14},qfhome:{x:10,y:14},home:{x:25,y:14}}; const deviceOffsets={};
 let dragging=null, routeFrame=0, suppressDiagramClick=false;
 const routePairs={
  grid_qf:['grid_l','qfgrid_il','grid_n','qfgrid_in'],
@@ -269,7 +269,7 @@ t('qfhome_il','qfhome','IN','L','L',1270,560,'ATS · LOAD OUT · L','L от АВ
 t('qfhome_ol','qfhome','OUT','L','L',1352,560,'HOUSE · AC IN · L','L отходящих линий щита.');t('qfhome_on','qfhome','OUT','N','N',1352,585,'HOUSE · AC IN · N','N к изолированной шине резервных линий; не к общим нейтралям всех источников.');
 function escapeHTML(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');}
 function boundOffset(d,x,y){return {x:Math.round(Math.max(12-d.x,Math.min(1588-d.x-d.w,x))),y:Math.round(Math.max(12-d.y,Math.min(743-d.y-d.h,y)))};}
-function getOffset(id){return deviceOffsets[id]||{x:0,y:0};}
+function getOffset(id){return deviceOffsets[id]||DEFAULT_DEVICE_OFFSETS[id]||{x:0,y:0};}
 function getWorldTerminal(t){const a=getOffset(t.device);return {x:t.x+a.x,y:t.y+a.y};}
 function getDevice(id){return devicePaths.find(d=>d.id===id);}
 function getPortDirection(t){const d=getDevice(t.device);const eps=.1;
@@ -343,7 +343,7 @@ function attachDragHandlers(){const svg=$('diagram');
  };
  svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
  svg.addEventListener('click',e=>{if(suppressDiagramClick){e.preventDefault();e.stopImmediatePropagation();suppressDiagramClick=false;}},true);
- $('resetLayout').addEventListener('click',()=>{for(const d of devicePaths){deviceOffsets[d.id]={x:0,y:0};applyDeviceTransform(d.id);}saveLayout();scheduleRoutes();addLog('Исходное расположение блоков восстановлено.');});
+ $('resetLayout').addEventListener('click',()=>{for(const d of devicePaths){deviceOffsets[d.id]={...(DEFAULT_DEVICE_OFFSETS[d.id]||{x:0,y:0})};applyDeviceTransform(d.id);}saveLayout();scheduleRoutes();addLog('Исходное расположение блоков восстановлено.');});
 }
 // Inline Lucide-style vector strokes: no CDN or network needed.
 const lucidePaths={
