@@ -107,16 +107,16 @@ body{letter-spacing:-.025em}
 <div class="control"><div class="control-row"><div class="control-title">АВР дома · 2×2P</div><span class="pill" id="atsAutoFlag">AUTO</span></div><div class="segmented" data-control="atsMode"><button data-value="auto" class="selected">Авто</button><button data-value="manual">Вручную</button></div><div style="height:7px"></div><div class="segmented three" data-control="atsManual" id="atsManual"><button data-value="grid" class="selected">I · Сеть</button><button data-value="inverter">II · Инв.</button><button data-value="generator">III · Ген.</button></div><div class="meta" style="margin-top:7px">Авто: сеть → инвертор → генератор (каскад)</div></div>
 <div class="control"><div class="control-row"><div class="control-title"><span data-lucide="arrow-left-right"></span> IEK 1-0-2 · заряд</div><span class="pill" id="chargeFlag">I</span></div><div class="segmented three" data-control="chargerMode"><button data-value="grid" class="selected">I · Сеть</button><button data-value="off">0 · Выкл</button><button data-value="generator">II · Ген.</button></div><div class="meta" style="margin-top:7px">Ручной переключатель I–0–II · L/N. Номинал и клеммы уточняются по модели IEK. Не АВР.</div></div>
 <div class="control"><div class="control-row"><div><label for="chargeSwitch">Зарядное устройство</label><div class="meta">Включить заряд от AC IN</div></div><button class="toggle" id="chargeSwitch" role="switch" aria-label="Зарядное устройство" aria-checked="true"></button></div></div>
-<div class="control"><div class="breaker-heading"><span data-lucide="shield-check"></span> Автоматические выключатели (2P)</div><div class="breaker-controls">
- <div class="breaker-control"><span>QF1<small>Сеть</small></span><button class="toggle" id="qfGridSwitch" aria-label="QF1 ввод сети" role="switch" aria-checked="true"></button></div>
- <div class="breaker-control"><span>QF2<small>Генератор</small></span><button class="toggle" id="qfGenSwitch" aria-label="QF2 ввод генератора" role="switch" aria-checked="true"></button></div>
- <div class="breaker-control"><span>QF3<small>AC IN</small></span><button class="toggle" id="qfChargeSwitch" aria-label="QF3 вход заряда" role="switch" aria-checked="true"></button></div>
- <div class="breaker-control"><span>QF4<small>Дом / щит</small></span><button class="toggle" id="qfHomeSwitch" aria-label="QF4 выход АВР" role="switch" aria-checked="true"></button></div>
+<div class="control"><div class="breaker-heading"><span data-lucide="shield-check"></span> Автоматические выключатели Eaton (2P)</div><div class="breaker-controls">
+ <div class="breaker-control"><span>QF1<small>Eaton · Сеть</small></span><button class="toggle" id="qfGridSwitch" aria-label="QF1 ввод сети" role="switch" aria-checked="true"></button></div>
+ <div class="breaker-control"><span>QF2<small>Eaton · Генератор</small></span><button class="toggle" id="qfGenSwitch" aria-label="QF2 ввод генератора" role="switch" aria-checked="true"></button></div>
+ <div class="breaker-control"><span>QF3<small>Eaton · AC IN</small></span><button class="toggle" id="qfChargeSwitch" aria-label="QF3 вход заряда" role="switch" aria-checked="true"></button></div>
+ <div class="breaker-control"><span>QF4<small>Eaton · Дом / щит</small></span><button class="toggle" id="qfHomeSwitch" aria-label="QF4 выход АВР" role="switch" aria-checked="true"></button></div>
  </div><div class="meta" style="margin-top:7px">Расчётные токи и ориентиры номиналов — ниже. QF отключают L/N в модели.</div></div>
 <div class="control" id="ratingsPanel"><div class="breaker-heading"><span data-lucide="calculator"></span> Мощности и подбор аппаратов</div>
 <div class="meta" style="margin:6px 0 10px">Изменяйте значения — расчётные токи и ориентиры аппаратов обновляются автоматически. АКБ задаётся в кВт·ч, не в кВт.</div>
 <div class="rating-grid"><label>Генератор, кВт<input type="number" id="pGen" min="0.5" max="40" step="0.1" value="2.8"></label><label>Инвертор AC OUT, кВт<input type="number" id="pInv" min="0.5" max="40" step="0.1" value="9"></label><label>АКБ, кВт·ч<input type="number" id="pCap" min="0.5" max="200" step="0.5" value="15"></label><label>Стабилизатор, кВт<input type="number" id="pStab" min="0.5" max="40" step="0.5" value="12"></label><label>Заряд AC IN, кВт<input type="number" id="pCharge" min="0.1" max="20" step="0.1" value="1"></label><label>Напряжение, В<input type="number" id="ratedVoltage" min="200" max="250" step="1" value="230"></label></div>
-<div class="rating-results" id="ratingResults" aria-live="polite"></div><div class="meta" style="margin-top:8px">⚠ Это ориентиры по току, а не готовые номиналы защиты. Автоматы выбирают по кабелю, токам КЗ, характеристике отключения, паспортам и режиму нейтрали. Номинал АВР не является защитой от перегрузки.</div></div>
+<div class="rating-results" id="ratingResults" aria-live="polite"></div><div class="meta" style="margin-top:8px">⚠ Это ориентиры по току, а не готовые номиналы защиты. Автоматы Eaton выбирают по кабелю, токам КЗ, характеристике отключения, паспортам и режиму нейтрали. Номинал АВР не является защитой от перегрузки.</div></div>
 <div class="control"><div class="range-row"><label for="soc">Заряд аккумулятора</label><b class="val" id="socText">65.0%</b></div><input type="range" id="soc" min="0" max="100" step="1" value="65"/><div class="scale"><span>0%</span><span>100%</span></div></div>
 <div class="control"><div class="range-row"><label for="load">Мощность дома</label><b class="val" id="loadText">1.8 кВт</b></div><input type="range" id="load" min="0.2" max="12" step="0.1" value="1.8"/><div class="scale"><span>0.2 кВт</span><span>12 кВт</span></div></div>
 <div class="sidebar-note"><strong>Условная симуляция, не монтажная инструкция.</strong> На графике только L/N, для батареи — DC +/−. В реальном щите защитный PE обязателен и не должен разрываться АВР; нулевая схема и защитные аппараты зависят от оборудования. Клеммы обозначены функционально, не номерами реальных устройств.</div>
@@ -226,15 +226,15 @@ const wireSets=Object.keys(routePairs).map(id=>({id,kind:id==='inv_battery'?'dc'
 const devicePaths=[
  {id:'grid',x:55,y:110,w:190,h:135,title:'ГОРОДСКАЯ СЕТЬ',sub:'Источник · 230 В',state:'L / N'},
  {id:'stab',x:315,y:110,w:225,h:135,title:'СТАБИЛИЗАТОР',sub:'Стабилизация 230 В',state:'12 кВт (условно)'},
- {id:'qfgrid',x:252,y:122,w:56,h:106,title:'QF1',sub:'2P',state:'Сеть'},
+ {id:'qfgrid',x:252,y:122,w:56,h:106,title:'QF1',sub:'EATON · 2P',state:'Сеть'},
  {id:'generator',x:65,y:495,w:190,h:150,title:'ГЕНЕРАТОР',sub:'230 В · 2.8 кВт',state:'Ручной запуск'},
- {id:'qfgen',x:290,y:502,w:80,h:120,title:'QF2',sub:'2P',state:'Генератор'},
+ {id:'qfgen',x:290,y:502,w:80,h:120,title:'QF2',sub:'EATON · 2P',state:'Генератор'},
  {id:'selector',x:690,y:105,w:240,h:175,title:'IEK 1-0-2',sub:'Ручной I–0–II · 2P',state:'Проверить клеммы по паспорту'},
- {id:'qfcharge',x:950,y:108,w:70,h:111,title:'QF3',sub:'2P',state:'AC IN'},
+ {id:'qfcharge',x:950,y:108,w:70,h:111,title:'QF3',sub:'EATON · 2P',state:'AC IN'},
  {id:'inverter',x:1030,y:95,w:235,h:235,title:'ИНВЕРТОР',sub:'AC IN / AC OUT',state:'9 кВт · заряд 1 кВт'},
  {id:'battery',x:1370,y:135,w:175,h:155,title:'АККУМУЛЯТОР',sub:'DC + / −',state:'15 кВт·ч'},
  {id:'ats',x:965,y:485,w:260,h:175,title:'АВР · КАСКАД 2×2P',sub:'АВР-1 + АВР-2 · 3 источника',state:'Разрыв перед включением'},
- {id:'qfhome',x:1270,y:515,w:82,h:117,title:'QF4',sub:'2P',state:'Щит дома'},
+ {id:'qfhome',x:1270,y:515,w:82,h:117,title:'QF4',sub:'EATON · 2P',state:'Щит дома'},
  {id:'home',x:1370,y:495,w:175,h:150,title:'ЩИТ ДОМА',sub:'Резервные линии',state:'N-шина после АВР'}
 ];
 const terminals=[];
