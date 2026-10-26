@@ -87,6 +87,7 @@ body{letter-spacing:-.025em}
 @media(prefers-reduced-motion:reduce){.diagram-svg .generator-fan .spinner{animation:none}}
 .diagram-svg .lucide-diagram-icon{color:var(--positive)}
 .diagram-svg .device[data-device^="qf"] .minor{font-size:8px;letter-spacing:-.045em}.diagram-svg .device[data-device^="qf"] .name{font-size:11px}.diagram-svg .device[data-device^="qf"] .micro{font-size:8px}
+.diagram-stage:fullscreen{background:var(--background,#0a1626);height:100vh;display:flex;flex-direction:column;padding:12px}.diagram-stage:fullscreen .diagram-scroll{flex:1;min-height:0;height:auto!important}.diagram-stage:fullscreen .diagram-svg{max-width:none}
 </style>
 </head>
 <body>
@@ -124,7 +125,7 @@ body{letter-spacing:-.025em}
 </div></aside>
 <div class="right"><div class="scenario-dock"><div class="section-title"><h2>ГОТОВЫЕ СЦЕНАРИИ</h2><span class="hint">Нажмите, чтобы воспроизвести ситуацию</span></div>
 <div class="scenario-bar" id="scenarioBar"><button class="scenario active" data-scenario="normal"><small>01</small>Нормальная сеть</button><button class="scenario" data-scenario="outage"><small>02</small>Пропала сеть</button><button class="scenario" data-scenario="generator"><small>03</small>Питание от генератора</button><button class="scenario" data-scenario="gencharge"><small>04</small>Генератор + заряд АКБ</button><button class="scenario" data-scenario="lowbat"><small>05</small>АКБ разряжен</button><button class="scenario" data-scenario="lowvoltage"><small>06</small>Низкое напряжение</button><button class="scenario" data-scenario="restore"><small>07</small>Сеть восстановилась</button><button class="scenario" data-scenario="overload"><small>08</small>Перегрузка</button></div></div>
-<section class="panel"><div class="diagram-head"><div><div class="eyebrow">Live circuit</div><div class="title-row">Схема потоков питания <span style="font-size:10px;color:#7595ad;font-weight:400">· перетаскивайте устройства</span></div></div><div class="diagram-actions"><div class="zoom-group" aria-label="Масштаб схемы"><button class="tinybtn" id="zoomOut" type="button" title="Уменьшить"><span data-lucide="minus"></span></button><span class="zoom-label" id="zoomLabel">100%</span><button class="tinybtn" id="zoomIn" type="button" title="Увеличить"><span data-lucide="plus"></span></button><button class="tinybtn" id="zoomFit" type="button" title="Вписать всю схему"><span data-lucide="maximize"></span></button></div><button class="tinybtn" id="resetLayout" title="Вернуть все блоки на первоначальные места"><span data-lucide="rotate-ccw"></span> Сброс блоков</button><button class="tinybtn" id="showTerminals"><span data-lucide="list-tree"></span> Клеммы</button><button class="tinybtn" id="showAll" title="Показать общий обзор"><span data-lucide="scan"></span> Обзор</button></div></div><div class="diagram-stage"><div class="stage-label"><span class="live-pulse"></span> SINGLE-LINE VIEW <span>230V / AC + DC</span></div><div class="diagram-scroll" id="diagramScroll"><svg class="diagram-svg" id="diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 755" role="img" aria-label="Интерактивная функциональная схема: городская сеть, стабилизатор, генератор, переключатель источника заряда, инвертор, аккумулятор, трёхисточниковый АВР, дом"><defs><pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#203853" opacity=".65"/></pattern><filter id="soft-glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="1600" height="755" fill="url(#dots)"/><g id="wireLayer"></g><g id="blockLayer"></g><g id="terminalLayer"></g><g id="flowLabels"></g></svg></div></div><div class="disclaimer-row">N-шина показана только на стороне резервной нагрузки. N разных источников не объединяются напрямую; PE скрыт на схеме, но обязателен в реальной установке.</div><div class="circuit-note"><div class="legend"><span><i class="sample"></i>L · фаза</span><span><i class="sample n"></i>N · нейтраль</span><span><i class="sample dc"></i>DC +</span><span><i class="sample off"></i>Обесточено</span></div><span>Колесо с Ctrl — масштаб · кнопки +/− · Shift + перетаскивание фона — прокрутка · позиции сохраняются</span></div></section>
+<section class="panel"><div class="diagram-head"><div><div class="eyebrow">Live circuit</div><div class="title-row">Схема потоков питания <span style="font-size:10px;color:#7595ad;font-weight:400">· перетаскивайте устройства</span></div></div><div class="diagram-actions"><div class="zoom-group" aria-label="Масштаб схемы"><button class="tinybtn" id="zoomOut" type="button" title="Уменьшить"><span data-lucide="minus"></span></button><span class="zoom-label" id="zoomLabel">100%</span><button class="tinybtn" id="zoomIn" type="button" title="Увеличить"><span data-lucide="plus"></span></button><button class="tinybtn" id="zoomFit" type="button" title="Вписать всю схему"><span data-lucide="maximize"></span></button></div><button class="tinybtn" id="resetLayout" title="Вернуть все блоки на первоначальные места"><span data-lucide="rotate-ccw"></span> Сброс блоков</button><button class="tinybtn" id="showTerminals"><span data-lucide="list-tree"></span> Клеммы</button><button class="tinybtn" id="fullscreenDiagram" type="button" title="Карта на весь экран"><span data-lucide="maximize-2"></span> Весь экран</button><button class="tinybtn" id="showAll" title="Показать общий обзор"><span data-lucide="scan"></span> Обзор</button></div></div><div class="diagram-stage" id="diagramStage"><div class="stage-label"><span class="live-pulse"></span> SINGLE-LINE VIEW <span>230V / AC + DC</span></div><div class="diagram-scroll" id="diagramScroll"><svg class="diagram-svg" id="diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 755" role="img" aria-label="Интерактивная функциональная схема: городская сеть, стабилизатор, генератор, переключатель источника заряда, инвертор, аккумулятор, трёхисточниковый АВР, дом"><defs><pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#203853" opacity=".65"/></pattern><filter id="soft-glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="1600" height="755" fill="url(#dots)"/><g id="wireLayer"></g><g id="blockLayer"></g><g id="terminalLayer"></g><g id="flowLabels"></g></svg></div></div><div class="disclaimer-row">N-шина показана только на стороне резервной нагрузки. N разных источников не объединяются напрямую; PE скрыт на схеме, но обязателен в реальной установке.</div><div class="circuit-note"><div class="legend"><span><i class="sample"></i>L · фаза</span><span><i class="sample n"></i>N · нейтраль</span><span><i class="sample dc"></i>DC +</span><span><i class="sample off"></i>Обесточено</span></div><span>Колесо с Ctrl — масштаб · кнопки +/− · Shift + перетаскивание фона — прокрутка · позиции сохраняются</span></div></section>
 <div class="mini-boxes"><section class="panel mini-panel"><h3><span data-lucide="activity"></span> Состояние системы</h3><div class="status-pair"><span>Источник питания дома</span><b id="activeSource">Городская сеть</b></div><div class="status-pair"><span>Источник зарядки инвертора</span><b id="activeCharge">Сеть через стабилизатор</b></div><div class="status-pair"><span>Потребление дома</span><b id="activeLoad">1.8 кВт</b></div><div class="status-pair"><span>Баланс аккумулятора</span><b id="batteryBalance">+1.0 кВт</b></div><div class="batbar"><div class="batbar-fill" id="batteryFill"></div></div><div class="status-pair"><span>Энергия в АКБ</span><b id="batteryEnergy">3.25 / 5.00 кВт·ч</b></div><div class="status-pair" style="margin-bottom:0"><span>Состояние защиты</span><b id="warnings">Нет критических событий</b></div></section>
 <section class="panel mini-panel"><h3><span data-lucide="clock-3"></span> Время и журнал переключений</h3><div class="sim-controls"><div class="segmented three" style="width:210px" data-control="speed"><button data-value="0">Пауза</button><button data-value="1" class="selected">×1</button><button data-value="5">×5</button></div><span class="timebox" id="simTime">00:00</span></div><div class="hint" style="margin:8px 0">×1 = 1 модельная минута за секунду. Уровень АКБ меняется со временем.</div><div class="logs" id="logs" aria-live="polite"></div></section></div>
 </div></main>
@@ -205,8 +206,8 @@ $('showTerminals').addEventListener('click',()=>{setTab('terminals');$('details'
 $('showAll').addEventListener('click',()=>{$('diagramScroll').scrollTo({left:0,behavior:'smooth'});setTab('overview');});
 function addLog(message,type=''){const wrap=$('logs');const el=document.createElement('div');el.className='log';const t=document.createElement('time');t.textContent=clock();const m=document.createElement('span');m.textContent=message;el.append(t,m);wrap.prepend(el);while(wrap.children.length>20)wrap.lastChild.remove();}
 // Drag positions are additional SVG transforms; the functional connection matrix never changes.
-const LAYOUT_KEY='power-lab-device-layout-v4';
-const DEFAULT_DEVICE_OFFSETS={grid:{x:-8,y:-14},qfgrid:{x:2,y:-14},stab:{x:15,y:-14},selector:{x:8,y:-14},qfcharge:{x:17,y:-14},inverter:{x:22,y:-14},battery:{x:26,y:-14},generator:{x:-8,y:14},qfgen:{x:10,y:14},ats:{x:0,y:14},qfhome:{x:10,y:14},home:{x:25,y:14}}; const deviceOffsets={};
+const LAYOUT_KEY='power-lab-device-layout-v5';
+const DEFAULT_DEVICE_OFFSETS={grid:{x:0,y:0},qfgrid:{x:48,y:0},stab:{x:95,y:0},selector:{x:155,y:0},qfcharge:{x:225,y:0},inverter:{x:300,y:0},battery:{x:365,y:0},generator:{x:0,y:145},qfgen:{x:55,y:145},ats:{x:175,y:145},qfhome:{x:265,y:145},home:{x:350,y:145}}; const deviceOffsets={};
 let dragging=null, routeFrame=0, suppressDiagramClick=false;
 const routePairs={
  grid_qf:['grid_l','qfgrid_il','grid_n','qfgrid_in'],
@@ -284,7 +285,7 @@ function saveLayout(){try{localStorage.setItem(LAYOUT_KEY,JSON.stringify(deviceO
 function applyDeviceTransform(id){const a=getOffset(id),transform=`translate(${a.x} ${a.y})`;const block=$('dev-'+id);const terminalsEl=document.querySelector(`[data-terminal-group="${id}"]`);if(block)block.setAttribute('transform',transform);if(terminalsEl)terminalsEl.setAttribute('transform',transform);}
 // A* router: four-way paths, bends penalized and device rectangles used as obstacles.
 // Red and blue lines are independently routed; connections retain their original L/N terminals.
-const ROUTE_STEP=12, ROUTE_W=134, ROUTE_H=63;
+const ROUTE_STEP=12; let ROUTE_W=184, ROUTE_H=94;
 function buildBlocked(){const blocked=new Uint8Array(ROUTE_W*ROUTE_H);const boxes=devicePaths.map(d=>{const a=getOffset(d.id);return {x:d.x+a.x-10,y:d.y+a.y-10,x2:d.x+a.x+d.w+10,y2:d.y+a.y+d.h+10};});
  for(let row=0;row<ROUTE_H;row++)for(let col=0;col<ROUTE_W;col++){
   const x=col*ROUTE_STEP,y=row*ROUTE_STEP;
@@ -337,7 +338,7 @@ function attachDragHandlers(){const svg=$('diagram');
   const point=svgPosition(e),deltaX=point.x-dragging.at.x,deltaY=point.y-dragging.at.y;
   if(!dragging.moved&&Math.hypot(deltaX,deltaY)<5)return;dragging.moved=true;
   const d=getDevice(dragging.id);deviceOffsets[d.id]=boundOffset(d,dragging.offset.x+deltaX,dragging.offset.y+deltaY);
-  applyDeviceTransform(d.id);scheduleRoutes();e.preventDefault();
+  applyDeviceTransform(d.id);expandCanvas();scheduleRoutes();e.preventDefault();
  });
  const endDrag=e=>{if(!dragging||e.pointerId!==dragging.pointerId)return;const active=dragging;dragging=null;const hit=$('dev-'+active.id);hit?.classList.remove('dragging');
   if(svg.hasPointerCapture(e.pointerId))svg.releasePointerCapture(e.pointerId);
@@ -345,7 +346,7 @@ function attachDragHandlers(){const svg=$('diagram');
  };
  svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
  svg.addEventListener('click',e=>{if(suppressDiagramClick){e.preventDefault();e.stopImmediatePropagation();suppressDiagramClick=false;}},true);
- $('resetLayout').addEventListener('click',()=>{for(const d of devicePaths){deviceOffsets[d.id]={...(DEFAULT_DEVICE_OFFSETS[d.id]||{x:0,y:0})};applyDeviceTransform(d.id);}saveLayout();scheduleRoutes();addLog('Исходное расположение блоков восстановлено.');});
+ $('resetLayout').addEventListener('click',()=>{for(const d of devicePaths){deviceOffsets[d.id]={...(DEFAULT_DEVICE_OFFSETS[d.id]||{x:0,y:0})};applyDeviceTransform(d.id);}expandCanvas();saveLayout();scheduleRoutes();addLog('Исходное расположение блоков восстановлено.');});
 }
 // Inline Lucide-style vector strokes: no CDN or network needed.
 const lucidePaths={
@@ -376,7 +377,7 @@ function paintIcons(){document.querySelectorAll('[data-lucide]').forEach(el=>el.
 function deviceIcon(id,x,y,size=20){const map={grid:'radio-tower',stab:'gauge',generator:'fuel',selector:'arrow-left-right',inverter:'cpu',battery:'battery-charging',ats:'split',home:'house',qfgrid:'shield-check',qfgen:'shield-check',qfcharge:'shield-check',qfhome:'shield-check'};
 return `<svg class="node-icon" x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" stroke="#9bc7e9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">${lucidePaths[map[id]||'zap']}</svg>`;}
 function renderStaticDiagram(){
- restoreLayout();
+ restoreLayout();expandCanvas();
  $('flowLabels').innerHTML=''; // Labels now sit inside devices, clear of draggable routes.
  $('blockLayer').innerHTML=devicePaths.map(d=>{
  const {x,y,w,h,id}=d,cx=x+w/2;let ex='';
@@ -449,17 +450,20 @@ function animate(ts){const delta=Math.min((ts-lastFrame)/1000,.25);lastFrame=ts;
 
 // Infinite-feeling canvas navigation: buttons, fit, Ctrl+wheel, shift+drag, double tap.
 let zoom=1;
+let canvasW=1600,canvasH=755;
+function expandCanvas(){let w=2200,h=1120;for(const d of devicePaths){const a=getOffset(d.id);w=Math.max(w,Math.ceil((d.x+a.x+d.w+90)/120)*120);h=Math.max(h,Math.ceil((d.y+a.y+d.h+90)/120)*120)}if(w===canvasW&&h===canvasH)return;canvasW=w;canvasH=h;const svg=$('diagram');svg.setAttribute('viewBox','0 0 '+canvasW+' '+canvasH);const bg=svg.querySelector('rect[fill="url(#dots)"]');if(bg){bg.setAttribute('width',canvasW);bg.setAttribute('height',canvasH)}svg.style.width=canvasW*zoom+'px';svg.style.height=canvasH*zoom+'px';ROUTE_W=Math.ceil(canvasW/ROUTE_STEP)+1;ROUTE_H=Math.ceil(canvasH/ROUTE_STEP)+1;}
 function setZoom(next,anchor){
  const sc=$('diagramScroll'),rect=sc.getBoundingClientRect(),old=zoom;
  zoom=Math.max(.18,Math.min(2.5,Math.round(next*100)/100));
  const x=anchor?anchor.x-rect.left:sc.clientWidth/2,y=anchor?anchor.y-rect.top:sc.clientHeight/2;
  const worldX=(sc.scrollLeft+x)/old,worldY=(sc.scrollTop+y)/old;
- const svg=$('diagram');svg.style.width=1600*zoom+'px';svg.style.height=755*zoom+'px';
+ const svg=$('diagram');svg.style.width=canvasW*zoom+'px';svg.style.height=canvasH*zoom+'px';
  sc.scrollLeft=worldX*zoom-x;sc.scrollTop=worldY*zoom-y;
  $('zoomLabel').textContent=Math.round(zoom*100)+'%';
 }
-function fitDiagram(){const sc=$('diagramScroll');setZoom(Math.min(1,Math.max(.18,(sc.clientWidth-22)/1600)));sc.scrollLeft=0;sc.scrollTop=0;}
+function fitDiagram(){const sc=$('diagramScroll');setZoom(Math.min(1,Math.max(.18,(sc.clientWidth-22)/canvasW)));sc.scrollLeft=0;sc.scrollTop=0;}
 $('showAll').addEventListener('click',fitDiagram);
+$('fullscreenDiagram').addEventListener('click',async()=>{const stage=$('diagramStage');try{if(document.fullscreenElement)await document.exitFullscreen();else await stage.requestFullscreen()}catch(e){addLog('Полноэкранный режим недоступен в этом браузере')}});
 $('zoomIn').addEventListener('click',()=>setZoom(zoom*1.2));$('zoomOut').addEventListener('click',()=>setZoom(zoom/1.2));$('zoomFit').addEventListener('click',fitDiagram);
 $('diagramScroll').addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZoom(zoom*(e.deltaY<0?1.12:.89),{x:e.clientX,y:e.clientY});}},{passive:false});
 let panning=null;
