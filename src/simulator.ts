@@ -156,7 +156,27 @@ function routeAllWires(){const blocked=buildBlocked(),s=latest;const html=[];
  for(const wire of wireSets){const pairs=routePairs[wire.id];for(let i=0;i<2;i++){
  const color=wire.kind==='dc'?(i?'neg':'pos'):(i?'n':'l');const path=routeConnection(pairs[i*2],pairs[i*2+1],blocked);const active=s&&s.flow[wire.id];
  html.push(`<path d="${path}" class="wirebase wire-${color}"/><path d="${path}" data-flow="${wire.id}" class="wireflow wire-${color} ${wire.kind==='dc'?'battery':''} ${active?'on':''} ${wire.id==='inv_battery'&&s&&s.dischargePower>0?'reverse':''}"/>`);
- }}$('wireLayer').innerHTML=html.join('');}
+ }}$('wireLayer').innerHTML=html.join('');appendCurrentPulses();}
+function appendCurrentPulses(){
+ const ns='http://www.w3.org/2000/svg';
+ const layer=$('wireLayer');
+ for(const path of layer.querySelectorAll('.wireflow')){
+  const group=document.createElementNS(ns,'g');
+  group.dataset.flow=path.dataset.flow;
+  group.setAttribute('class','current-particles '+(path.classList.contains('on')?'on ':'')+([...path.classList].find(v=>v.startsWith('wire-'))||''));
+  for(let index=0;index<2;index++){
+   const dot=document.createElementNS(ns,'circle');dot.setAttribute('class','current-particle');dot.setAttribute('r','4.7');
+   const movement=document.createElementNS(ns,'animateMotion');
+   movement.setAttribute('path',path.getAttribute('d')||'');
+   movement.setAttribute('dur','2.8s');movement.setAttribute('begin',index===0?'0s':'-1.4s');
+   movement.setAttribute('repeatCount','indefinite');
+   movement.setAttribute('calcMode','linear');movement.setAttribute('keyTimes','0;1');
+   movement.setAttribute('keyPoints',path.classList.contains('wire-n')?'1;0':'0;1');
+   dot.appendChild(movement);group.appendChild(dot);
+  }
+  layer.appendChild(group);
+ }
+}
 function scheduleRoutes(){if(!routeFrame)routeFrame=requestAnimationFrame(()=>{routeFrame=0;routeAllWires();});}
 function svgPosition(event){const svg=$('diagram'),point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;return point.matrixTransform(svg.getScreenCTM().inverse());}
 function attachDragHandlers(){const svg=$('diagram');
@@ -282,7 +302,7 @@ function animate(ts){const delta=Math.min((ts-lastFrame)/1000,.25);lastFrame=ts;
 // Infinite-feeling canvas navigation: buttons, fit, Ctrl+wheel, shift+drag, double tap.
 let zoom=1;
 let canvasW=1600,canvasH=755;
-function expandCanvas(){const bounds=canvasSize(devicePaths.map(d=>{const a=getOffset(d.id);return {x:d.x+a.x,y:d.y+a.y,width:d.w,height:d.h}}));let w=bounds.width,h=bounds.height;if(w===canvasW&&h===canvasH)return;canvasW=w;canvasH=h;const svg=$('diagram');svg.setAttribute('viewBox','0 0 '+canvasW+' '+canvasH);const bg=svg.querySelector('rect[fill="url(#dots)"]');if(bg){bg.setAttribute('width',canvasW);bg.setAttribute('height',canvasH)}svg.style.width=canvasW*zoom+'px';svg.style.height=canvasH*zoom+'px';ROUTE_W=Math.ceil(canvasW/ROUTE_STEP)+1;ROUTE_H=Math.ceil(canvasH/ROUTE_STEP)+1;}
+function expandCanvas(){const bounds=canvasSize(devicePaths.map(d=>{const a=getOffset(d.id);return {x:d.x+a.x,y:d.y+a.y,width:d.w,height:d.h}}),1600,755);let w=bounds.width,h=bounds.height;if(w===canvasW&&h===canvasH)return;canvasW=w;canvasH=h;const svg=$('diagram');svg.setAttribute('viewBox','0 0 '+canvasW+' '+canvasH);const bg=svg.querySelector('rect[fill="url(#dots)"]');if(bg){bg.setAttribute('width',canvasW);bg.setAttribute('height',canvasH)}svg.style.width=canvasW*zoom+'px';svg.style.height=canvasH*zoom+'px';ROUTE_W=Math.ceil(canvasW/ROUTE_STEP)+1;ROUTE_H=Math.ceil(canvasH/ROUTE_STEP)+1;}
 function setZoom(next,anchor?:any){
  const sc=$('diagramScroll'),rect=sc.getBoundingClientRect(),old=zoom;
  zoom=Math.max(.18,Math.min(2.5,Math.round(next*100)/100));
@@ -292,10 +312,24 @@ function setZoom(next,anchor?:any){
  sc.scrollLeft=worldX*zoom-x;sc.scrollTop=worldY*zoom-y;
  $('zoomLabel').textContent=Math.round(zoom*100)+'%';
 }
-function fitDiagram(){const sc=$('diagramScroll');setZoom(Math.min(1,Math.max(.18,(sc.clientWidth-22)/canvasW)));sc.scrollLeft=0;sc.scrollTop=0;}
+function fitDiagram(){
+ const sc=$('diagramScroll'),fullscreen=document.fullscreenElement===$('diagramStage');
+ const width=Math.max(1,sc.clientWidth-32)/canvasW;
+ const height=Math.max(1,sc.clientHeight-32)/canvasH;
+ setZoom(Math.max(.18,fullscreen?Math.min(2.5,width,height):Math.min(1,width)));
+ sc.scrollLeft=0;sc.scrollTop=0;
+}
 $('showAll').addEventListener('click',fitDiagram);
 $('exitFullscreen').addEventListener('click',()=>{if(document.fullscreenElement)void document.exitFullscreen()});
-$('fullscreenDiagram').addEventListener('click',async()=>{const stage=$('diagramStage');try{if(document.fullscreenElement)await document.exitFullscreen();else await stage.requestFullscreen()}catch(e){addLog('Полноэкранный режим недоступен в этом браузере')}});
+let savedViewport:{zoom:number,left:number,top:number}|null=null;
+document.addEventListener('fullscreenchange',()=>{
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  if(document.fullscreenElement===$('diagramStage'))fitDiagram();
+  else if(savedViewport){const old=savedViewport;savedViewport=null;setZoom(old.zoom);const sc=$('diagramScroll');sc.scrollLeft=old.left;sc.scrollTop=old.top;}
+ }));
+});
+window.addEventListener('resize',()=>{if(document.fullscreenElement===$('diagramStage'))requestAnimationFrame(fitDiagram);});
+$('fullscreenDiagram').addEventListener('click',async()=>{const stage=$('diagramStage');try{if(document.fullscreenElement)await document.exitFullscreen();else{const sc=$('diagramScroll');savedViewport={zoom,left:sc.scrollLeft,top:sc.scrollTop};await stage.requestFullscreen()}}catch(e){addLog('Полноэкранный режим недоступен в этом браузере')}});
 $('zoomIn').addEventListener('click',()=>setZoom(zoom*1.2));$('zoomOut').addEventListener('click',()=>setZoom(zoom/1.2));$('zoomFit').addEventListener('click',fitDiagram);
 $('diagramScroll').addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZoom(zoom*(e.deltaY<0?1.12:.89),{x:e.clientX,y:e.clientY});}},{passive:false});
 let panning=null;

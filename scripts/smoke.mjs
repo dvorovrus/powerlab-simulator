@@ -38,10 +38,25 @@ try{
  assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),'light');
  await page.locator('#zoomIn').click();
  assert.match(await page.locator('#zoomLabel').textContent(),/\d+%/);
+ const priorZoom=await page.locator('#zoomLabel').textContent();
+ await page.setViewportSize({width:1650,height:930});
  await page.locator('#fullscreenDiagram').click();
- await page.waitForTimeout(200);
+ await page.waitForTimeout(450);
  assert.equal(await page.evaluate(()=>Boolean(document.fullscreenElement)),true);
- await page.locator('#exitFullscreen').click();
+ const frame=await page.evaluate(()=>{const stage=document.querySelector('#diagramStage').getBoundingClientRect(),svg=document.querySelector('#diagram').getBoundingClientRect();return {stageWidth:stage.width,stageHeight:stage.height,svgWidth:svg.width,svgHeight:svg.height,leftSpace:svg.left-stage.left,rightSpace:stage.right-svg.right,topSpace:svg.top-stage.top,bottomSpace:stage.bottom-svg.bottom}});
+ console.log('Fullscreen coverage:',JSON.stringify(frame));
+ assert.ok(frame.svgWidth/frame.stageWidth>.88,'Fullscreen must occupy most viewport width');
+ assert.ok(frame.svgHeight/frame.stageHeight>.72,'Fullscreen must occupy most viewport height');
+ assert.ok(Math.abs(frame.leftSpace-frame.rightSpace)<45,'Diagram must be horizontally centered');
+ assert.ok(Math.abs(frame.topSpace-frame.bottomSpace)<90,'Diagram must be vertically centered');
+ const count=await page.locator('.current-particles.on circle').count();
+ assert.ok(count>=20,'Active conductors should display moving electricity pulses');
+ const pulseAt=()=>page.locator('.current-particles.on circle').first().evaluate(el=>{const m=el.getCTM();return {x:m.e,y:m.f,visible:getComputedStyle(el.parentElement).opacity}});
+ const firstPulse=await pulseAt();await page.waitForTimeout(520);const nextPulse=await pulseAt();
+ assert.ok(Math.hypot(nextPulse.x-firstPulse.x,nextPulse.y-firstPulse.y)>1,'Current pulses must visibly move along conductors');
+ assert.ok(Number(nextPulse.visible)>.9,'Current pulses should not be invisible');
+ await page.locator('#exitFullscreen').click();await page.waitForTimeout(180);
+ assert.equal(await page.locator('#zoomLabel').textContent(),priorZoom,'Zoom must restore after fullscreen');
  const blocks=await page.locator('.device .main').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {id:node.parentElement?.getAttribute('data-device'),x:r.x,y:r.y,w:r.width,h:r.height}}));
  const overlaps=[];for(let i=0;i<blocks.length;i++)for(let j=i+1;j<blocks.length;j++){const a=blocks[i],b=blocks[j];if(Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>4&&Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>4)overlaps.push(a.id+' vs '+b.id);}
  const gaps=[];for(let i=0;i<blocks.length;i++)for(let j=i+1;j<blocks.length;j++){const a=blocks[i],b=blocks[j];const dx=Math.max(0,a.x-b.x-b.w,b.x-a.x-a.w);const dy=Math.max(0,a.y-b.y-b.h,b.y-a.y-a.h);gaps.push({pair:a.id+' / '+b.id,distance:Math.round(Math.hypot(dx,dy)*10)/10});}gaps.sort((a,b)=>a.distance-b.distance);console.log('Closest devices:',JSON.stringify(gaps.slice(0,5)));assert.ok(gaps[0].distance>20,'Device blocks must remain visually separated');
